@@ -12,6 +12,10 @@ trait AppartientAEtablissement
         static::addGlobalScope(new ScopeEtablissement);
 
         static::creating(function ($model) {
+            if ($model->etablissement_id !== null) {
+                return;
+            }
+
             $contexte = app(ContexteEtablissement::class);
 
             if ($contexte->estDefini()) {

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Etablissement extends Model
 {
+    use HasFactory;
+
     protected $table = 'etablissements';
 
     protected $fillable = [
@@ -24,6 +27,21 @@ class Etablissement extends Model
     public function domaines(): HasMany
     {
         return $this->hasMany(Domaine::class);
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Categorie::class);
+    }
+
+    public function produits(): HasMany
+    {
+        return $this->hasMany(Produit::class);
+    }
+
+    public function medias(): HasMany
+    {
+        return $this->hasMany(Media::class);
     }
 
     public function estActif(): bool

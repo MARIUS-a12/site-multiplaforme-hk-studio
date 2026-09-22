@@ -160,3 +160,9 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ## Fichiers interdits
 Ne jamais lire, ouvrir ni afficher le contenu de `.env` ni d'aucun fichier `.env.*`.
 Ne pas explorer `vendor/`, `node_modules/` ni `storage/logs/`.
+
+## Invariant d'isolation
+L'isolation multi-établissements repose sur les événements Eloquent.
+Interdits sans validation explicite : Model::insert() en masse,
+DB::table(), les requêtes brutes sur les tables métier, et
+WithoutModelEvents dans les seeders comme dans les tests.
