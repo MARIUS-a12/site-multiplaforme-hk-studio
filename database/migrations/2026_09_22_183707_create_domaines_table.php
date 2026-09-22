@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('domaines', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('boutique_id')->constrained('boutiques')->cascadeOnDelete();
+            $table->foreignId('etablissement_id')->constrained('etablissements')->cascadeOnDelete();
             $table->string('hote')->unique();
             $table->string('type')->default('sous_domaine');
             $table->boolean('est_principal')->default(false);
