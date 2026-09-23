@@ -7,6 +7,46 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Tests
+
+Deux suites, pour deux besoins différents.
+
+### Suite rapide (SQLite en mémoire) — usage quotidien
+
+Isolation multi-tenant, règles métier (mode de stock, disponibilité), factories, seeder. Aucune dépendance externe, aucun service à démarrer.
+
+```bash
+php artisan test
+# ou directement :
+vendor/bin/phpunit
+```
+
+C'est la suite par défaut (`defaultTestSuite="Unit,Feature"` dans `phpunit.xml`) : elle ne lance jamais la suite Postgres, même sans argument.
+
+### Suite `Postgres` — contraintes CHECK, verrous, transactions
+
+Tout ce que SQLite ne peut pas vérifier fidèlement : les contraintes `CHECK` posées en base (ex. `quantite_reservee <= quantite_stock`), et à terme les verrous/transactions concurrentes. Ces tests tournent sur une vraie base PostgreSQL dédiée, `saas_boutiques_test` — jamais sur la base de développement.
+
+Préparation, une seule fois par environnement (utilise les identifiants de la connexion `pgsql` déjà configurée dans `.env`, seul le nom de la base change) :
+
+```bash
+php artisan tinker --execute "DB::statement('CREATE DATABASE saas_boutiques_test')"
+```
+
+Lancement :
+
+```bash
+php artisan test --testsuite=Postgres
+```
+
+Cette suite migre `saas_boutiques_test` à la demande (`RefreshDatabase`) et n'est jamais incluse dans un `php artisan test` sans argument — elle a besoin d'un PostgreSQL accessible localement, ce qui n'est pas garanti partout (CI légère, poste sans Postgres, etc.).
+
+### Tout lancer
+
+```bash
+php artisan test --testsuite=Unit,Feature,Postgres
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
