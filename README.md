@@ -9,11 +9,7 @@
 
 ## Tests
 
-Deux suites, pour deux besoins différents.
-
-### Suite rapide (SQLite en mémoire) — usage quotidien
-
-Isolation multi-tenant, règles métier (mode de stock, disponibilité), factories, seeder. Aucune dépendance externe, aucun service à démarrer.
+Deux suites, pour deux besoins différents — et depuis le noyau stock/commande, **les deux sont nécessaires** : `php artisan test` sans argument exige donc un PostgreSQL accessible en local.
 
 ```bash
 php artisan test
@@ -21,11 +17,13 @@ php artisan test
 vendor/bin/phpunit
 ```
 
-C'est la suite par défaut (`defaultTestSuite="Unit,Feature"` dans `phpunit.xml`) : elle ne lance jamais la suite Postgres, même sans argument.
+### Suite rapide (SQLite en mémoire)
 
-### Suite `Postgres` — contraintes CHECK, verrous, transactions
+Isolation multi-tenant, règles métier (mode de stock, disponibilité), services de commande, factories, seeder. Aucune dépendance externe, aucun service à démarrer.
 
-Tout ce que SQLite ne peut pas vérifier fidèlement : les contraintes `CHECK` posées en base (ex. `quantite_reservee <= quantite_stock`), et à terme les verrous/transactions concurrentes. Ces tests tournent sur une vraie base PostgreSQL dédiée, `saas_boutiques_test` — jamais sur la base de développement.
+### Suite `Postgres` — CHECK, verrous, concurrence réelle
+
+Tout ce que SQLite ne peut pas vérifier fidèlement : les contraintes `CHECK` posées en base (ex. `quantite_reservee <= quantite_stock`), la séquence de numérotation des commandes, et surtout la **concurrence réelle** sur la réservation de stock — plusieurs processus `php artisan` indépendants (composant `Process` de Symfony ; Windows n'a pas `pcntl_fork`), chacun avec sa propre connexion, lancés en parallèle contre une vraie base PostgreSQL dédiée, `saas_boutiques_test` — jamais la base de développement.
 
 Préparation, une seule fois par environnement (utilise les identifiants de la connexion `pgsql` déjà configurée dans `.env`, seul le nom de la base change) :
 
@@ -33,19 +31,13 @@ Préparation, une seule fois par environnement (utilise les identifiants de la c
 php artisan tinker --execute "DB::statement('CREATE DATABASE saas_boutiques_test')"
 ```
 
-Lancement :
+Lancement isolé :
 
 ```bash
 php artisan test --testsuite=Postgres
 ```
 
-Cette suite migre `saas_boutiques_test` à la demande (`RefreshDatabase`) et n'est jamais incluse dans un `php artisan test` sans argument — elle a besoin d'un PostgreSQL accessible localement, ce qui n'est pas garanti partout (CI légère, poste sans Postgres, etc.).
-
-### Tout lancer
-
-```bash
-php artisan test --testsuite=Unit,Feature,Postgres
-```
+Cette suite migre `saas_boutiques_test` à la demande (`RefreshDatabase`). Les tests de concurrence désactivent l'enveloppe transactionnelle habituelle de `RefreshDatabase` (`connectionsToTransact()` vide, voir `Tests\ConcurrenceTestCase`) : leurs écritures sont de vrais commits, seul moyen de les rendre visibles depuis les processus enfants qu'ils lancent. Chaque test nettoie lui-même l'établissement qu'il a créé (cascade sur tout le reste) en `tearDown()`.
 
 ## About Laravel
 

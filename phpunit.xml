@@ -3,7 +3,7 @@
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         defaultTestSuite="Unit,Feature"
+         defaultTestSuite="Unit,Feature,Postgres"
 >
     <testsuites>
         <testsuite name="Unit">
@@ -15,10 +15,10 @@
         </testsuite>
         <!--
             Suite lente, nécessite un PostgreSQL réel (base dédiée
-            saas_boutiques_test) : contraintes CHECK, verrous, transactions.
-            Volontairement exclue de "Feature" ci-dessus pour ne jamais être
-            exécutée par erreur sur SQLite. Non incluse dans un run par
-            défaut : toujours lancée explicitement (option testsuite=Postgres).
+            saas_boutiques_test) : contraintes CHECK, verrous, transactions
+            concurrentes réelles (composant Process de Symfony). Incluse dans
+            le run par défaut depuis Temps C : `php artisan test` sans
+            argument exige donc désormais un PostgreSQL accessible en local.
         -->
         <testsuite name="Postgres">
             <directory>tests/Feature/Postgres</directory>

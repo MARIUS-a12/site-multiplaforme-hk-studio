@@ -37,7 +37,13 @@ class CreerCommande
         string $cleIdempotence,
         ?ZoneLivraison $zoneLivraison = null,
     ): Commande {
-        $existante = $etablissement->commandes()->where('cle_idempotence', $cleIdempotence)->first();
+        // pourTousEtablissements() partout dans ce service, jamais le
+        // contexte ambiant : $etablissement, reçu en paramètre, est déjà la
+        // seule source de vérité, et ce service doit rester correct même
+        // sans contexte posé — c'est le cas de CHAQUE appel fait par un
+        // processus concurrence:creer-commande (voir Tests\ConcurrenceTestCase),
+        // qui tourne dans un processus séparé sans contexte du tout.
+        $existante = $etablissement->commandes()->pourTousEtablissements()->where('cle_idempotence', $cleIdempotence)->first();
 
         if ($existante !== null) {
             return $existante;
@@ -59,7 +65,7 @@ class CreerCommande
             // concurrent, ex. double clic client). La nôtre n'a rien réservé
             // — sa transaction est retombée en rollback — donc c'est celle de
             // l'autre appel qui fait foi.
-            return $etablissement->commandes()->where('cle_idempotence', $cleIdempotence)->firstOrFail();
+            return $etablissement->commandes()->pourTousEtablissements()->where('cle_idempotence', $cleIdempotence)->firstOrFail();
         }
     }
 
@@ -173,7 +179,10 @@ class CreerCommande
 
     private function resoudreLigne(Etablissement $etablissement, LigneCommandeDemandee $demande): LigneResolue
     {
-        $produit = $etablissement->produits()->with('variantes')->findOrFail($demande->produitId);
+        $produit = $etablissement->produits()
+            ->pourTousEtablissements()
+            ->with(['variantes' => fn ($requete) => $requete->pourTousEtablissements()])
+            ->findOrFail($demande->produitId);
         $variante = $this->resoudreVariante($produit, $demande);
 
         return new LigneResolue($produit, $variante, $demande->quantite);
@@ -197,16 +206,30 @@ class CreerCommande
                 );
             }
 
-            return $variante;
+            return $this->lierProduit($variante, $produit);
         }
 
         return match ($produit->variantes->count()) {
             0 => null,
-            1 => $produit->variantes->first(),
+            1 => $this->lierProduit($produit->variantes->first(), $produit),
             default => throw new SelectionVarianteInvalideException(
                 "Le produit \"{$produit->nom}\" a plusieurs variantes : précisez laquelle."
             ),
         };
+    }
+
+    /**
+     * L'eager load de `variantes` (resoudreLigne) ne renseigne pas la
+     * relation inverse `variante->produit` : un accès non lié (ex.
+     * VarianteProduit::prixEffectif()) déclencherait un lazy load qui
+     * applique le scope global de Produit — et lève, faute de contexte
+     * ambiant, dans CHAQUE processus concurrence:creer-commande (voir
+     * Tests\ConcurrenceTestCase). $produit est déjà en main : pas besoin
+     * d'une requête, juste de le rattacher explicitement.
+     */
+    private function lierProduit(VarianteProduit $variante, Produit $produit): VarianteProduit
+    {
+        return $variante->setRelation('produit', $produit);
     }
 
     /**

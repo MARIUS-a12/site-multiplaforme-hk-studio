@@ -12,6 +12,7 @@ use App\Models\Etablissement;
 use App\Models\Produit;
 use App\Services\Commandes\CreerCommande;
 use App\Services\Commandes\LigneCommandeDemandee;
+use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,6 +23,7 @@ class CreerCommandeTest extends TestCase
     public function test_mode_compte_avec_variante_reserve_et_est_idempotent(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->avecVariantes(1)->create();
         $variante = $produit->variantes()->first();
@@ -60,6 +62,7 @@ class CreerCommandeTest extends TestCase
     public function test_mode_compte_sans_variante_reserve_sur_le_produit_lui_meme(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->create([
             'quantite_stock' => 10,
@@ -86,6 +89,7 @@ class CreerCommandeTest extends TestCase
     public function test_mode_interrupteur_ne_cree_aucune_reservation(): void
     {
         $etablissement = Etablissement::factory()->restaurant()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Resto']);
         $produit = Produit::factory()->for($etablissement)->create(['disponible' => true]);
 
@@ -105,6 +109,7 @@ class CreerCommandeTest extends TestCase
     public function test_stock_insuffisant_sur_variante_leve_et_ne_persiste_rien(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->avecVariantes(1)->create();
         $variante = $produit->variantes()->first();
@@ -128,6 +133,7 @@ class CreerCommandeTest extends TestCase
     public function test_stock_insuffisant_sur_produit_sans_variante_leve_et_ne_persiste_rien(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->create([
             'quantite_stock' => 2,
@@ -146,6 +152,7 @@ class CreerCommandeTest extends TestCase
     public function test_variante_hors_produit_et_ambiguite_levent_sans_rien_persister(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produitA = Produit::factory()->for($etablissement)->avecVariantes(2)->create();
         $produitB = Produit::factory()->for($etablissement)->avecVariantes(1)->create();

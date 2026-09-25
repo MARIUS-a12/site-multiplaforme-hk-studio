@@ -12,6 +12,7 @@ use App\Services\Commandes\AnnulerCommande;
 use App\Services\Commandes\CreerCommande;
 use App\Services\Commandes\LigneCommandeDemandee;
 use App\Services\Stock\ConsommerReservation;
+use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,6 +23,7 @@ class AnnulerCommandeTest extends TestCase
     public function test_annuler_libere_le_stock_journalise_le_motif_et_est_idempotent(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->create([
             'quantite_stock' => 10,
@@ -56,6 +58,7 @@ class AnnulerCommandeTest extends TestCase
     public function test_une_commande_deja_payee_ne_peut_plus_etre_annulee(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->create([
             'quantite_stock' => 10,

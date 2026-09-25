@@ -3,10 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\StatutMembre;
+use App\Support\Tenancy\ContexteEtablissement;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -27,6 +30,47 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'est_super_admin' => 'boolean',
         ];
+    }
+
+    public function appartenances(): HasMany
+    {
+        return $this->hasMany(EtablissementUtilisateur::class, 'utilisateur_id');
+    }
+
+    /**
+     * Interroge les permissions du rôle que l'utilisateur possède DANS
+     * l'établissement courant (ContexteEtablissement), jamais globalement :
+     * sans contexte défini, la réponse est toujours non — y compris pour le
+     * super-admin, dont le passe-droit est géré séparément par le
+     * Gate::before d'AppServiceProvider, pas ici. Les policies n'ont donc
+     * jamais besoin de connaître son existence.
+     */
+    public function peut(string $permission): bool
+    {
+        $contexte = app(ContexteEtablissement::class);
+
+        if (! $contexte->estDefini()) {
+            return false;
+        }
+
+        return $this->appartenances()
+            ->where('etablissement_id', $contexte->id())
+            ->where('statut', StatutMembre::Actif)
+            ->whereHas('role.permissions', fn ($requete) => $requete->where('nom', $permission))
+            ->exists();
+    }
+
+    /**
+     * Un booléen sur `users`, pas une ligne dans etablissement_utilisateurs :
+     * le super-admin n'appartient à aucun établissement, donc aucune ligne à
+     * y chercher — un etablissement_id nullable pour ce seul cas aurait
+     * affaibli la contrainte UNIQUE (etablissement_id, utilisateur_id) pour
+     * tout le monde. Sert uniquement au Gate::before d'AppServiceProvider.
+     */
+    public function estSuperAdmin(): bool
+    {
+        return $this->est_super_admin === true;
     }
 }

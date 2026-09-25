@@ -29,4 +29,17 @@ class Domaine extends Model
     {
         return $this->belongsTo(Etablissement::class);
     }
+
+    /**
+     * Résout l'établissement d'un hôte SANS filtrer sur son statut : c'est à
+     * l'appelant de décider quoi faire d'un établissement inactif.
+     * ResoudreEtablissement refuse la requête (404) ; SessionController le
+     * traite comme un échec de connexion identique aux trois autres, pour ne
+     * jamais distinguer "établissement inactif" de "mauvais mot de passe"
+     * dans sa réponse.
+     */
+    public static function pourHote(string $hote): ?Etablissement
+    {
+        return static::with('etablissement')->where('hote', $hote)->first()?->etablissement;
+    }
 }

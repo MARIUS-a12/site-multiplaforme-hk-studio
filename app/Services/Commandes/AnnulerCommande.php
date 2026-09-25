@@ -5,6 +5,7 @@ namespace App\Services\Commandes;
 use App\Enums\StatutCommande;
 use App\Enums\StatutReservation;
 use App\Models\Commande;
+use App\Models\ReservationStock;
 use App\Services\Stock\LibererReservation;
 use Illuminate\Support\Facades\DB;
 
@@ -42,7 +43,14 @@ class AnnulerCommande
                 'motif' => $motif,
             ])->pourEtablissement($commande->etablissement_id)->save();
 
-            foreach ($commande->reservations()->where('statut', StatutReservation::Active)->get() as $reservation) {
+            // pourTousEtablissements() explicite, pas $commande->reservations()
+            // (relation) : voir la même remarque dans ConsommerReservation.
+            $reservationsActives = ReservationStock::pourTousEtablissements()
+                ->where('commande_id', $commande->id)
+                ->where('statut', StatutReservation::Active)
+                ->get();
+
+            foreach ($reservationsActives as $reservation) {
                 $this->libererReservation->executer($reservation);
             }
         });

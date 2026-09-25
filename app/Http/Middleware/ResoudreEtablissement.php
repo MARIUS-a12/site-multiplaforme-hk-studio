@@ -19,13 +19,19 @@ class ResoudreEtablissement
     {
         $hote = $request->getHost();
 
-        $domaine = Domaine::with('etablissement')->where('hote', $hote)->first();
+        // Le super-admin a son propre hôte, sans établissement : exclu de la
+        // résolution, le contexte reste indéfini pour la suite de la requête.
+        if ($hote === config('tenancy.hote_super_admin')) {
+            return $next($request);
+        }
 
-        if (! $domaine || ! $domaine->etablissement || ! $domaine->etablissement->estActif()) {
+        $etablissement = Domaine::pourHote($hote);
+
+        if ($etablissement === null || ! $etablissement->estActif()) {
             throw new NotFoundHttpException("Aucun établissement actif pour le domaine [{$hote}].");
         }
 
-        $this->contexte->definir($domaine->etablissement);
+        $this->contexte->definir($etablissement);
 
         return $next($request);
     }

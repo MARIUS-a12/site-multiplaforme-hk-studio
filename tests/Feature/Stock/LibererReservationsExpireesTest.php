@@ -12,6 +12,7 @@ use App\Models\Produit;
 use App\Services\Commandes\CreerCommande;
 use App\Services\Commandes\LigneCommandeDemandee;
 use App\Services\Stock\LibererReservation;
+use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -22,6 +23,7 @@ class LibererReservationsExpireesTest extends TestCase
     public function test_le_job_libere_le_stock_expire_expire_la_commande_et_est_idempotent(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->avecVariantes(1)->create();
         $variante = $produit->variantes()->first();
@@ -60,6 +62,7 @@ class LibererReservationsExpireesTest extends TestCase
     public function test_le_job_ne_touche_pas_une_commande_encore_dans_les_delais(): void
     {
         $etablissement = Etablissement::factory()->boutique()->create();
+        app(ContexteEtablissement::class)->definir($etablissement);
         $client = $etablissement->clients()->create(['nom' => 'Client Test']);
         $produit = Produit::factory()->for($etablissement)->create([
             'quantite_stock' => 10,

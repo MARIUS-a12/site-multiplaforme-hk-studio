@@ -46,7 +46,16 @@ class ConsommerReservation
                 'motif' => null,
             ])->pourEtablissement($commande->etablissement_id)->save();
 
-            foreach ($commande->reservations as $reservation) {
+            // $commande->reservations (accès de relation) appliquerait le
+            // scope global de ReservationStock, qui lève sans contexte ambiant
+            // — jamais posé ici, ce service opère sur une commande déjà
+            // identifiée par id. pourTousEtablissements() explicite comme
+            // partout ailleurs dans ce fichier.
+            $reservations = ReservationStock::pourTousEtablissements()
+                ->where('commande_id', $commande->id)
+                ->get();
+
+            foreach ($reservations as $reservation) {
                 $this->consommerUneReservation($reservation);
             }
         });

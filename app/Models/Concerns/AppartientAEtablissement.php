@@ -41,9 +41,19 @@ trait AppartientAEtablissement
         });
     }
 
-    public static function pourTousEtablissements(): Builder
+    /**
+     * Scope local Eloquent, pas une simple méthode statique : ça le rend
+     * chaînable partout où un scope global gênerait un appelant de confiance
+     * qui connaît déjà le bon périmètre — pas seulement `Produit::
+     * pourTousEtablissements()`, mais aussi `$commande->reservations()->
+     * pourTousEtablissements()` ou une contrainte d'eager-load
+     * (`->with(['variantes' => fn ($q) => $q->pourTousEtablissements()])`).
+     * L'appel statique `Model::pourTousEtablissements()` continue de
+     * fonctionner à l'identique (Eloquent forwarde vers une requête neuve).
+     */
+    public function scopePourTousEtablissements(Builder $query): Builder
     {
-        return static::withoutGlobalScope(ScopeEtablissement::class);
+        return $query->withoutGlobalScope(ScopeEtablissement::class);
     }
 
     /**

@@ -91,6 +91,42 @@ class AppartientAEtablissementTest extends TestCase
         $this->horsConsole(fn () => ProduitFixture::all());
     }
 
+    /**
+     * Un job de file (paiement confirmé par webhook, IA WhatsApp...) tourne
+     * "en console" au même titre qu'une commande artisan ou ce process de
+     * test PHPUnit — c'est justement ce qui rendait l'ancienne échappatoire
+     * dangereuse : un traitement de fond qui interroge un modèle sans avoir
+     * résolu d'établissement (bug d'implémentation, pas cas volontaire) se
+     * serait vu répondre TOUTES les données de TOUS les établissements,
+     * silencieusement, sans qu'aucune requête HTTP ne remarque jamais
+     * l'anomalie. Ce test tourne SANS le simulateur horsConsole() ci-dessus :
+     * le contexte console réel de PHPUnit doit se comporter exactement comme
+     * celui d'un job, pas différemment.
+     */
+    public function test_une_requete_en_console_sans_contexte_ne_renvoie_jamais_toutes_les_donnees(): void
+    {
+        $contexte = app(ContexteEtablissement::class);
+
+        $etablissementA = Etablissement::create(['nom' => 'Etablissement A', 'slug' => 'etablissement-a', 'type' => 'boutique']);
+        $etablissementB = Etablissement::create(['nom' => 'Etablissement B', 'slug' => 'etablissement-b', 'type' => 'boutique']);
+
+        $contexte->definir($etablissementA);
+        ProduitFixture::create(['nom' => 'Produit A']);
+
+        $contexte->definir($etablissementB);
+        ProduitFixture::create(['nom' => 'Produit B']);
+
+        $contexte->definir(null);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Aucun établissement n'est défini");
+
+        // Toujours "en console" ici (process PHPUnit) : avant le correctif,
+        // cette ligne renvoyait silencieusement les 2 produits des 2
+        // établissements au lieu de lever.
+        ProduitFixture::all();
+    }
+
     public function test_update_et_delete_en_masse_naffectent_pas_lautre_etablissement(): void
     {
         $contexte = app(ContexteEtablissement::class);
