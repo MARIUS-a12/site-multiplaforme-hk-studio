@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class Produit extends Model
@@ -171,5 +172,38 @@ class Produit extends Model
     public function scopePublies(Builder $query): Builder
     {
         return $query->where('statut', StatutProduit::Publie);
+    }
+
+    /**
+     * Un produit sans variante porte son propre stock (voir
+     * estDisponibleEnQuantite ci-dessus) : ces trois méthodes sont le
+     * pendant, sur `produits`, de VarianteProduit::reserverAtomiquement() et
+     * consorts, pour les lignes de commande qui ciblent le produit lui-même.
+     *
+     * pourTousEtablissements() : l'id vient toujours d'une ligne déjà résolue
+     * et validée par l'appelant (CreerCommande, LibererReservation,
+     * ConsommerReservation) — ce n'est pas une lecture tenant-scopée qui
+     * doive dépendre d'un contexte ambiant, potentiellement absent dans un
+     * job ou un webhook de paiement.
+     */
+    public static function reserverAtomiquement(int $produitId, int $quantite): bool
+    {
+        return static::pourTousEtablissements()
+            ->whereKey($produitId)
+            ->whereRaw('quantite_stock - quantite_reservee >= ?', [$quantite])
+            ->increment('quantite_reservee', $quantite) > 0;
+    }
+
+    public static function libererAtomiquement(int $produitId, int $quantite): void
+    {
+        static::pourTousEtablissements()->whereKey($produitId)->decrement('quantite_reservee', $quantite);
+    }
+
+    public static function consommerAtomiquement(int $produitId, int $quantite): void
+    {
+        static::pourTousEtablissements()->whereKey($produitId)->update([
+            'quantite_stock' => DB::raw("quantite_stock - {$quantite}"),
+            'quantite_reservee' => DB::raw("quantite_reservee - {$quantite}"),
+        ]);
     }
 }

@@ -166,3 +166,8 @@ L'isolation multi-établissements repose sur les événements Eloquent.
 Interdits sans validation explicite : Model::insert() en masse,
 DB::table(), les requêtes brutes sur les tables métier, et
 WithoutModelEvents dans les seeders comme dans les tests.
+
+## Après toute migration
+Appliquer sur la base de DÉVELOPPEMENT aussi (php artisan migrate),
+pas seulement sur les bases de test. Et vérifier à la main dans tinker
+qu'un parcours réel fonctionne avant de déclarer une étape terminée.

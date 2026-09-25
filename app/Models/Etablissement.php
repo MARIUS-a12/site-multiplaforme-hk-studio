@@ -44,6 +44,21 @@ class Etablissement extends Model
         return $this->hasMany(Media::class);
     }
 
+    public function clients(): HasMany
+    {
+        return $this->hasMany(Client::class);
+    }
+
+    public function zonesLivraison(): HasMany
+    {
+        return $this->hasMany(ZoneLivraison::class);
+    }
+
+    public function commandes(): HasMany
+    {
+        return $this->hasMany(Commande::class);
+    }
+
     public function estActif(): bool
     {
         return $this->statut === 'actif';
