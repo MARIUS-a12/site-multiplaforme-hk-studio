@@ -96,7 +96,7 @@ class SessionController extends Controller
 
             $role = Role::where('nom', 'super_admin')->with('permissions')->firstOrFail();
 
-            return $this->reponseMoi($utilisateur, $role);
+            return $this->reponseMoi($utilisateur, $role, null);
         }
 
         $membre = $this->trouverAppartenance($utilisateur, $etablissement)?->loadMissing('role.permissions');
@@ -105,16 +105,26 @@ class SessionController extends Controller
             abort(403, 'Aucune appartenance active pour cet utilisateur ici.');
         }
 
-        return $this->reponseMoi($utilisateur, $membre->role);
+        return $this->reponseMoi($utilisateur, $membre->role, $etablissement);
     }
 
-    private function reponseMoi(User $utilisateur, Role $role): JsonResponse
+    /**
+     * etablissement est transmis explicitement plutôt que relu depuis le
+     * contexte : sur l'hôte du super-admin, ce dernier n'en a aucun (voir
+     * moi() ci-dessus), et cette méthode doit refléter cette absence sans
+     * avoir à connaître elle-même ce cas particulier.
+     */
+    private function reponseMoi(User $utilisateur, Role $role, ?Etablissement $etablissement): JsonResponse
     {
         return response()->json([
             'utilisateur' => [
                 'id' => $utilisateur->id,
                 'nom' => $utilisateur->name,
                 'email' => $utilisateur->email,
+            ],
+            'etablissement' => $etablissement === null ? null : [
+                'id' => $etablissement->id,
+                'nom' => $etablissement->nom,
             ],
             'role' => $role->nom,
             'permissions' => $role->permissions->pluck('nom')->values(),
