@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CategorieController;
 use App\Http\Controllers\Api\CommandeController;
 use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
@@ -19,9 +20,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/moi', [SessionController::class, 'moi'])->middleware('resoudre.etablissement');
 
     Route::middleware('resoudre.etablissement')->group(function () {
+        Route::get('/produits', [ProduitController::class, 'index']);
+        Route::post('/produits', [ProduitController::class, 'store']);
         Route::get('/produits/{produit}', [ProduitController::class, 'show']);
         Route::put('/produits/{produit}', [ProduitController::class, 'update']);
         Route::delete('/produits/{produit}', [ProduitController::class, 'destroy']);
+
+        Route::get('/categories', [CategorieController::class, 'index']);
+        Route::post('/categories', [CategorieController::class, 'store']);
+        Route::put('/categories/{categorie}', [CategorieController::class, 'update']);
+        Route::delete('/categories/{categorie}', [CategorieController::class, 'destroy']);
 
         Route::get('/commandes', [CommandeController::class, 'index']);
 
