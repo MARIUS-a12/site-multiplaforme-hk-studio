@@ -5,13 +5,19 @@
  */
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_API_URL
-
-if (!baseURL) {
-  throw new Error(
-    "VITE_API_URL n'est pas défini. Copiez .env.example vers .env et renseignez l'URL de l'API.",
-  )
-}
+/**
+ * L'adresse de l'API n'est JAMAIS écrite en dur : chaque établissement a
+ * son propre sous-domaine (chez-awa.localhost, maquis-du-port.localhost,
+ * …), c'est lui qui détermine l'établissement, et l'API vit toujours sur
+ * ce MÊME sous-domaine — seul le port diffère en développement
+ * (VITE_API_PORT=8000 ; vide en production, où l'API est sur le port
+ * standard). Une adresse fixe (ex. VITE_API_URL=http://chez-awa...)
+ * enverrait toutes les requêtes au même établissement quel que soit le
+ * sous-domaine réellement ouvert dans le navigateur — cassant le
+ * multi-établissements dès qu'on ouvre le site sur un autre sous-domaine.
+ */
+const port = import.meta.env.VITE_API_PORT
+const baseURL = `${window.location.protocol}//${window.location.hostname}${port ? `:${port}` : ''}`
 
 export const client = axios.create({
   baseURL,

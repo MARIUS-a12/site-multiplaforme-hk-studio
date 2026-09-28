@@ -13,7 +13,13 @@ export function useMoi() {
     queryKey: CLE_MOI,
     queryFn: recupererMoi,
     // Un 401 signifie "pas connecté" : ce n'est pas une panne réseau à
-    // réessayer, la route protégée doit rediriger tout de suite.
+    // réessayer, la route protégée doit rediriger tout de suite. Idem pour
+    // un refetch automatique au focus de la fenêtre ou à la reconnexion
+    // réseau : sur l'écran de connexion (où cette requête n'est de toute
+    // façon jamais appelée) comme sur une page protégée, ça ne doit jamais
+    // relancer /api/moi tout seul en arrière-plan.
     retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   })
 }

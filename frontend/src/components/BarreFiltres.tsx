@@ -6,6 +6,7 @@
  */
 import { Search } from 'lucide-react'
 import type { StatutProduit } from '../api/produits'
+import { GroupeSegmente } from './GroupeSegmente'
 
 const OPTIONS: { valeur: StatutProduit | ''; libelle: string }[] = [
   { valeur: '', libelle: 'Tous' },
@@ -43,25 +44,7 @@ export function BarreFiltres({
         />
       </div>
 
-      <div className="inline-flex overflow-hidden rounded border border-bordure">
-        {OPTIONS.map((option, index) => (
-          <button
-            key={option.valeur}
-            type="button"
-            onClick={() => onStatutChange(option.valeur)}
-            aria-pressed={statut === option.valeur}
-            className={`h-11 flex-1 cursor-pointer px-3 text-corps font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire ${
-              index > 0 ? 'border-l border-bordure' : ''
-            } ${
-              statut === option.valeur
-                ? 'bg-primaire text-surface'
-                : 'bg-surface text-texte hover:bg-surface-alt'
-            }`}
-          >
-            {option.libelle}
-          </button>
-        ))}
-      </div>
+      <GroupeSegmente options={OPTIONS} valeur={statut} onChange={onStatutChange} />
     </div>
   )
 }

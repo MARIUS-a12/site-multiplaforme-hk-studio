@@ -10,6 +10,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { connecter } from '../api/auth'
 import { CLE_MOI } from '../hooks/useMoi'
+import { reinitialiserGardeRedirection } from '../lib/gardeRedirectionConnexion'
 
 /**
  * Extrait un message d'erreur à afficher tel quel. Le corps de la réponse
@@ -43,6 +44,7 @@ export function PageConnexionUtilisateur() {
   const connexion = useMutation({
     mutationFn: () => connecter(email, motDePasse),
     onSuccess: async () => {
+      reinitialiserGardeRedirection()
       await queryClient.invalidateQueries({ queryKey: CLE_MOI })
       navigate('/', { replace: true })
     },

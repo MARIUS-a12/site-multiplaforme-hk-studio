@@ -2,12 +2,14 @@
  * Écran principal du back-office — route protégée "/". Bande de
  * statistiques (publiés/en rupture/brouillons), barre de recherche et de
  * filtres, puis la liste des produits elle-même : cartes empilées sous
- * 768px, tableau triable au-dessus. Ne fait ni création ni modification de
- * produit — ça arrive à une étape suivante.
+ * 768px, tableau triable au-dessus. Chaque ligne mène à la modification du
+ * produit ; la création passe par le bouton "Ajouter un produit".
  */
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { BadgeStatut } from '../components/BadgeStatut'
+import { BandeauSucces } from '../components/BandeauSucces'
 import { BandeStatistiques } from '../components/BandeStatistiques'
 import { BarreFiltres } from '../components/BarreFiltres'
 import { CarreInitiale } from '../components/CarreInitiale'
@@ -16,6 +18,7 @@ import { EtatErreur } from '../components/EtatErreur'
 import { EtatVide } from '../components/EtatVide'
 import { PastilleStock } from '../components/PastilleStock'
 import { useCategories } from '../hooks/useCategories'
+import { useMoi } from '../hooks/useMoi'
 import { useProduits } from '../hooks/useProduits'
 import { useValeurDifferee } from '../hooks/useValeurDifferee'
 import { formaterMontant } from '../lib/formatage'
@@ -30,8 +33,26 @@ export function PageListeProduits() {
 
   const rechercheDifferee = useValeurDifferee(recherche)
   const { data: categories } = useCategories()
+  const { data: moi } = useMoi()
+  const peutGererCatalogue = moi?.permissions.includes('gerer_catalogue') ?? false
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  const { data, isPending, isError, refetch, isFetching } = useProduits({
+  // Capturé une seule fois, à l'arrivée sur cette page (création,
+  // modification ou archivage réussis redirigent ici avec ce message dans
+  // l'état de navigation) — voir onFermer plus bas pour le nettoyage.
+  const [messageSucces, setMessageSucces] = useState<string | null>(
+    () => (location.state as { messageSucces?: string } | null)?.messageSucces ?? null,
+  )
+
+  function fermerBandeauSucces() {
+    setMessageSucces(null)
+    // Retire messageSucces de l'historique : sans ça, un rechargement de
+    // page réafficherait le même bandeau.
+    navigate(location.pathname, { replace: true, state: null })
+  }
+
+  const { data, isPending, isError, error, refetch, isFetching } = useProduits({
     recherche: rechercheDifferee || undefined,
     statut: statut || undefined,
     tri,
@@ -55,28 +76,48 @@ export function PageListeProduits() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <h1 className="text-titre-page font-semibold text-texte">Produits</h1>
+      {messageSucces && <BandeauSucces message={messageSucces} onFermer={fermerBandeauSucces} />}
+
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-titre-page font-semibold text-texte">Produits</h1>
+        {peutGererCatalogue && (
+          <Link
+            to="/produits/nouveau"
+            className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          >
+            <Plus aria-hidden="true" size={20} strokeWidth={1.5} />
+            <span className="hidden sm:inline">Ajouter un produit</span>
+          </Link>
+        )}
+      </div>
 
       <BandeStatistiques />
 
-      <BarreFiltres
-        recherche={recherche}
-        onRechercheChange={(valeur) => {
-          setRecherche(valeur)
-          setPage(1)
-        }}
-        statut={statut}
-        onStatutChange={(valeur) => {
-          setStatut(valeur)
-          setPage(1)
-        }}
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <BarreFiltres
+          recherche={recherche}
+          onRechercheChange={(valeur) => {
+            setRecherche(valeur)
+            setPage(1)
+          }}
+          statut={statut}
+          onStatutChange={(valeur) => {
+            setStatut(valeur)
+            setPage(1)
+          }}
+        />
+        <Link to="/categories" className="text-petit text-primaire underline">
+          Gérer les catégories
+        </Link>
+      </div>
 
       {isPending && <EtatChargement />}
 
-      {isError && <EtatErreur onReessayer={() => refetch()} />}
+      {isError && <EtatErreur erreur={error} onReessayer={() => refetch()} />}
 
-      {!isPending && !isError && data && data.data.length === 0 && <EtatVide />}
+      {!isPending && !isError && data && data.data.length === 0 && (
+        <EtatVide peutCreer={peutGererCatalogue} />
+      )}
 
       {!isPending && !isError && data && data.data.length > 0 && (
         <>
@@ -86,26 +127,28 @@ export function PageListeProduits() {
               const categorie = nomCategorie(produit)
 
               return (
-                <li
-                  key={produit.id}
-                  className="flex items-start gap-3 border border-bordure bg-surface p-4 transition-colors duration-150 hover:bg-surface-alt"
-                >
-                  <CarreInitiale nom={produit.nom} taille={48} />
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate text-corps font-semibold text-texte">
-                      {produit.nom}
-                    </span>
-                    <span className="tabular-nums text-corps font-medium text-texte">
-                      {formaterMontant(produit.prix)}
-                    </span>
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <PastilleStock produit={produit} />
-                      <span className="flex items-center gap-1.5 text-petit text-texte-secondaire">
-                        <BadgeStatut statut={produit.statut} />
-                        {categorie && <span>· {categorie}</span>}
+                <li key={produit.id}>
+                  <Link
+                    to={`/produits/${produit.id}/modifier`}
+                    className="flex items-start gap-3 border border-bordure bg-surface p-4 transition-colors duration-150 hover:bg-surface-alt"
+                  >
+                    <CarreInitiale nom={produit.nom} taille={48} />
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-corps font-semibold text-texte">
+                        {produit.nom}
                       </span>
+                      <span className="tabular-nums text-corps font-medium text-texte">
+                        {formaterMontant(produit.prix)}
+                      </span>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <PastilleStock produit={produit} />
+                        <span className="flex items-center gap-1.5 text-petit text-texte-secondaire">
+                          <BadgeStatut statut={produit.statut} />
+                          {categorie && <span>· {categorie}</span>}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </li>
               )
             })}
@@ -137,12 +180,20 @@ export function PageListeProduits() {
                 const categorie = nomCategorie(produit)
 
                 return (
-                  <tr key={produit.id} className="transition-colors duration-150 hover:bg-surface-alt">
+                  <tr
+                    key={produit.id}
+                    onClick={() => navigate(`/produits/${produit.id}/modifier`)}
+                    className="cursor-pointer transition-colors duration-150 hover:bg-surface-alt"
+                  >
                     <td className="border-b border-bordure px-4 py-3">
-                      <div className="flex items-center gap-3">
+                      <Link
+                        to={`/produits/${produit.id}/modifier`}
+                        className="flex items-center gap-3"
+                        onClick={(evenement) => evenement.stopPropagation()}
+                      >
                         <CarreInitiale nom={produit.nom} taille={40} />
                         <span className="text-corps font-semibold text-texte">{produit.nom}</span>
-                      </div>
+                      </Link>
                     </td>
                     <td className="border-b border-bordure px-4 py-3 tabular-nums text-corps font-medium text-texte">
                       {formaterMontant(produit.prix)}

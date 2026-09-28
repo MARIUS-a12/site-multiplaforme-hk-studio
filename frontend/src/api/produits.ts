@@ -59,3 +59,50 @@ export async function recupererProduits(
 
   return data
 }
+
+export async function recupererProduit(id: number): Promise<Produit> {
+  const { data } = await client.get<{ data: Produit }>(`/api/produits/${id}`)
+
+  return data.data
+}
+
+/**
+ * Corps envoyé à la création/modification. Ni slug (généré côté API), ni
+ * mode_stock (déduit à la création, verrouillé en modification) : ces deux
+ * champs n'existent pas dans le formulaire, voir PageFormulaireProduit.
+ */
+export type ProduitPayload = {
+  nom: string
+  categorie_id: number | null
+  prix: number
+  prix_barre: number | null
+  description: string | null
+  reference: string | null
+  quantite_stock?: number
+  disponible?: boolean
+  // Absent quand on modifie un produit déjà archivé : ce formulaire ne
+  // propose pas de le republier (une action à part, prévue plus tard), et
+  // envoyer "brouillon" par défaut le désarchiverait sans que le
+  // commerçant l'ait demandé.
+  statut?: 'brouillon' | 'publie'
+}
+
+export async function creerProduit(payload: ProduitPayload): Promise<Produit> {
+  const { data } = await client.post<{ data: Produit }>('/api/produits', payload)
+
+  return data.data
+}
+
+export async function modifierProduit(id: number, payload: ProduitPayload): Promise<Produit> {
+  const { data } = await client.put<{ data: Produit }>(`/api/produits/${id}`, payload)
+
+  return data.data
+}
+
+/**
+ * "Supprimer" n'existe pas dans cette API : l'appel archive (statut passe à
+ * "archive"), l'historique de ventes du produit est conservé.
+ */
+export async function archiverProduit(id: number): Promise<void> {
+  await client.delete(`/api/produits/${id}`)
+}

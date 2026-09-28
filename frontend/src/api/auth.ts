@@ -11,9 +11,11 @@ export type Utilisateur = {
   email: string
 }
 
+export type TypeEtablissement = 'boutique' | 'restaurant'
+
 export type Moi = {
   utilisateur: Utilisateur
-  etablissement: { id: number; nom: string } | null
+  etablissement: { id: number; nom: string; type: TypeEtablissement } | null
   role: string
   permissions: string[]
 }

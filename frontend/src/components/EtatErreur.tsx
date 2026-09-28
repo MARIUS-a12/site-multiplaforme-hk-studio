@@ -1,10 +1,35 @@
 /**
- * État d'erreur générique pour une liste : message clair en français +
- * bouton Réessayer. Jamais d'écran blanc, jamais de message technique brut.
+ * État d'erreur générique pour une liste ou une fiche. La forme change
+ * selon le type d'erreur : un refus ou une ressource introuvable ne se
+ * résoudront jamais en réessayant, le bouton Réessayer n'a donc de sens
+ * que pour une panne réseau ou une erreur serveur.
  */
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Lock, SearchX } from 'lucide-react'
+import { typeErreurAffichage } from '../lib/erreurAffichage'
 
-export function EtatErreur({ onReessayer }: { onReessayer: () => void }) {
+export function EtatErreur({ erreur, onReessayer }: { erreur?: unknown; onReessayer: () => void }) {
+  const type = typeErreurAffichage(erreur)
+
+  if (type === 'permission') {
+    return (
+      <div className="flex flex-col items-center gap-3 border border-bordure bg-surface px-6 py-16 text-center">
+        <Lock aria-hidden="true" size={40} strokeWidth={1.5} className="text-danger" />
+        <p className="max-w-sm text-corps text-texte">
+          Vous n'avez pas les droits nécessaires pour cette action.
+        </p>
+      </div>
+    )
+  }
+
+  if (type === 'introuvable') {
+    return (
+      <div className="flex flex-col items-center gap-3 border border-bordure bg-surface px-6 py-16 text-center">
+        <SearchX aria-hidden="true" size={40} strokeWidth={1.5} className="text-danger" />
+        <p className="max-w-sm text-corps text-texte">Élément introuvable.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-center gap-3 border border-bordure bg-surface px-6 py-16 text-center">
       <AlertTriangle aria-hidden="true" size={40} strokeWidth={1.5} className="text-danger" />
