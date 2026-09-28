@@ -18,13 +18,25 @@ class CategorieController extends Controller
     {
         Gate::authorize('viewAny', Categorie::class);
 
-        $categories = Categorie::query()->orderBy('ordre')->orderBy('nom')->get();
+        $categories = Categorie::query()->withCount('produits')->orderBy('ordre')->orderBy('nom')->get();
 
         return CategorieResource::collection($categories);
     }
 
+    /**
+     * "Sacs", "sacs" et "Sacs  " ne doivent jamais donner deux catégories :
+     * si une correspondance existe déjà (voir
+     * StoreCategorieRequest::categorieDejaExistante()), on la renvoie telle
+     * quelle (200) plutôt que d'en créer une deuxième (201).
+     */
     public function store(StoreCategorieRequest $request): JsonResponse
     {
+        $categorieExistante = $request->categorieDejaExistante();
+
+        if ($categorieExistante !== null) {
+            return (new CategorieResource($categorieExistante))->response()->setStatusCode(200);
+        }
+
         $categorie = Categorie::create($request->validated());
 
         return (new CategorieResource($categorie))->response()->setStatusCode(201);

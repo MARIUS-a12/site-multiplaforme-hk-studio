@@ -67,6 +67,7 @@ class UpdateProduitRequest extends FormRequest
                 },
             ],
             'quantite_stock' => ['sometimes', 'integer', 'min:0'],
+            'disponible' => ['sometimes', 'boolean'],
             'statut' => ['sometimes', Rule::enum(StatutProduit::class)],
             'mode_stock' => ['prohibited'],
         ];

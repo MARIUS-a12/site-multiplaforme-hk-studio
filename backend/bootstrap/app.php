@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\EtablissementNonResoluException;
 use App\Http\Middleware\ResoudreEtablissement;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -46,4 +47,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Une requête sur un modèle tenant-scopé sans établissement résolu
+        // (le super-admin, dont l'hôte dédié n'en a jamais un) est une
+        // situation prévue, pas un plantage : 400 avec un message explicite
+        // plutôt qu'un 500 qui masque la cause réelle et pollue les
+        // journaux d'erreurs de faux positifs.
+        $exceptions->render(fn (EtablissementNonResoluException $e) => response()->json(['message' => $e->getMessage()], 400));
     })->create();

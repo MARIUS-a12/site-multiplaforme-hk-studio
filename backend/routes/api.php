@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CategorieController;
 use App\Http\Controllers\Api\CommandeController;
+use App\Http\Controllers\Api\EtablissementController;
 use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
 use App\Http\Controllers\Api\SessionController;
@@ -18,6 +19,10 @@ Route::post('/connexion', [SessionController::class, 'store'])->middleware('thro
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deconnexion', [SessionController::class, 'destroy']);
     Route::get('/moi', [SessionController::class, 'moi'])->middleware('resoudre.etablissement');
+
+    // Pas de "resoudre.etablissement" ici : réservée au super-admin (voir
+    // EtablissementPolicy), qui n'a justement pas d'établissement courant.
+    Route::get('/etablissements', [EtablissementController::class, 'index']);
 
     Route::middleware('resoudre.etablissement')->group(function () {
         Route::get('/produits', [ProduitController::class, 'index']);

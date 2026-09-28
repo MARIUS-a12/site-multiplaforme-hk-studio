@@ -19,6 +19,10 @@ class CategorieResource extends JsonResource
             'description' => $this->description,
             'ordre' => $this->ordre,
             'statut' => $this->statut,
+            // Seulement présent quand le contrôleur a chargé le compte
+            // (withCount) : whenCounted renvoie sinon un champ absent plutôt
+            // qu'un zéro trompeur.
+            'produits_count' => $this->whenCounted('produits'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -125,6 +125,10 @@ class SessionController extends Controller
             'etablissement' => $etablissement === null ? null : [
                 'id' => $etablissement->id,
                 'nom' => $etablissement->nom,
+                // Le frontend en a besoin pour savoir quel bloc stock
+                // afficher au formulaire produit (quantité vs interrupteur),
+                // avant même qu'un seul produit existe pour le déduire.
+                'type' => $etablissement->type,
             ],
             'role' => $role->nom,
             'permissions' => $role->permissions->pluck('nom')->values(),

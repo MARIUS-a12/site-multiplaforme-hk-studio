@@ -93,14 +93,32 @@ class ProduitsApiTest extends TestCase
         $modification->assertJsonPath('data.nom', 'Jus de Bissap');
     }
 
-    public function test_2_operateur_recoit_403_sur_creation_et_modification_produit(): void
+    /**
+     * L'opérateur n'a que voir_catalogue (lecture) : il traite les
+     * commandes et doit voir produits/catégories et leurs prix, sans
+     * pouvoir les modifier — gerer_catalogue reste réservé à l'admin.
+     */
+    public function test_2_operateur_lecture_catalogue_autorisee_ecriture_refusee(): void
     {
         $this->seed();
 
         $maquisDuPort = Etablissement::where('slug', 'maquis-du-port')->firstOrFail();
         $produitMaquis = Produit::pourTousEtablissements()->where('etablissement_id', $maquisDuPort->id)->firstOrFail();
+        $categorieMaquis = Categorie::pourTousEtablissements()->where('etablissement_id', $maquisDuPort->id)->firstOrFail();
 
         $this->connecte('maquis-du-port.localhost', 'yao@maquis-du-port.test');
+
+        $this->depuis('maquis-du-port.localhost')
+            ->getJson('http://maquis-du-port.localhost:8000/api/produits')
+            ->assertStatus(200);
+
+        $this->depuis('maquis-du-port.localhost')
+            ->getJson("http://maquis-du-port.localhost:8000/api/produits/{$produitMaquis->id}")
+            ->assertStatus(200);
+
+        $this->depuis('maquis-du-port.localhost')
+            ->getJson('http://maquis-du-port.localhost:8000/api/categories')
+            ->assertStatus(200);
 
         $this->depuis('maquis-du-port.localhost')
             ->postJson('http://maquis-du-port.localhost:8000/api/produits', ['nom' => 'Tentative', 'prix' => 500])
@@ -108,6 +126,22 @@ class ProduitsApiTest extends TestCase
 
         $this->depuis('maquis-du-port.localhost')
             ->putJson("http://maquis-du-port.localhost:8000/api/produits/{$produitMaquis->id}", ['prix' => 999])
+            ->assertStatus(403);
+
+        $this->depuis('maquis-du-port.localhost')
+            ->deleteJson("http://maquis-du-port.localhost:8000/api/produits/{$produitMaquis->id}")
+            ->assertStatus(403);
+
+        $this->depuis('maquis-du-port.localhost')
+            ->postJson('http://maquis-du-port.localhost:8000/api/categories', ['nom' => 'Tentative'])
+            ->assertStatus(403);
+
+        $this->depuis('maquis-du-port.localhost')
+            ->putJson("http://maquis-du-port.localhost:8000/api/categories/{$categorieMaquis->id}", ['nom' => 'Tentative'])
+            ->assertStatus(403);
+
+        $this->depuis('maquis-du-port.localhost')
+            ->deleteJson("http://maquis-du-port.localhost:8000/api/categories/{$categorieMaquis->id}")
             ->assertStatus(403);
     }
 

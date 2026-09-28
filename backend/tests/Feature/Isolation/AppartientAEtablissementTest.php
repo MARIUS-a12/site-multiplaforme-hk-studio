@@ -86,7 +86,7 @@ class AppartientAEtablissementTest extends TestCase
         $contexte->definir(null);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Aucun établissement n'est défini");
+        $this->expectExceptionMessage('Aucun établissement résolu pour ce domaine');
 
         $this->horsConsole(fn () => ProduitFixture::all());
     }
@@ -119,7 +119,7 @@ class AppartientAEtablissementTest extends TestCase
         $contexte->definir(null);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Aucun établissement n'est défini");
+        $this->expectExceptionMessage('Aucun établissement résolu pour ce domaine');
 
         // Toujours "en console" ici (process PHPUnit) : avant le correctif,
         // cette ligne renvoyait silencieusement les 2 produits des 2

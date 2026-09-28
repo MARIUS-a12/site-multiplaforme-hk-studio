@@ -23,8 +23,30 @@ class StoreCategorieRequest extends FormRequest
         }
     }
 
+    /**
+     * "Sacs", "sacs" et "Sacs  " doivent être vus comme la même catégorie :
+     * comparaison en PHP (Str::lower, pas LOWER() en SQL) pour un résultat
+     * fiable sur les caractères accentués quelle que soit la collation de la
+     * base ; sans conséquence sur les perfs, une établissement n'a jamais
+     * qu'une poignée de catégories.
+     */
+    public function categorieDejaExistante(): ?Categorie
+    {
+        $nom = trim((string) $this->input('nom', ''));
+
+        if ($nom === '') {
+            return null;
+        }
+
+        return Categorie::all()->first(
+            fn (Categorie $categorie) => Str::lower(trim($categorie->nom)) === Str::lower($nom)
+        );
+    }
+
     public function rules(): array
     {
+        $categorieExistante = $this->categorieDejaExistante();
+
         return [
             'nom' => ['required', 'string', 'max:255'],
             'slug' => [
@@ -32,7 +54,9 @@ class StoreCategorieRequest extends FormRequest
                 'string',
                 'max:255',
                 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/',
-                Rule::unique('categories', 'slug')->where('etablissement_id', app(ContexteEtablissement::class)->id()),
+                Rule::unique('categories', 'slug')
+                    ->where('etablissement_id', app(ContexteEtablissement::class)->id())
+                    ->ignore($categorieExistante),
             ],
             'description' => ['nullable', 'string'],
             'ordre' => ['nullable', 'integer'],

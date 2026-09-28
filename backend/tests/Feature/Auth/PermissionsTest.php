@@ -6,8 +6,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Étape 1 — test 4 : Yao (opérateur, voir_commandes/gerer_commandes/
- * gerer_clients uniquement) n'a pas gerer_parametres ni voir_statistiques.
+ * Étape 1 — test 4 : Yao (opérateur, voir_catalogue/voir_commandes/
+ * gerer_commandes/gerer_clients uniquement) n'a pas gerer_parametres ni
+ * voir_statistiques.
  */
 class PermissionsTest extends TestCase
 {

@@ -2,11 +2,11 @@
 
 namespace App\Models\Concerns;
 
+use App\Exceptions\EtablissementNonResoluException;
 use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use RuntimeException;
 
 class ScopeEtablissement implements Scope
 {
@@ -36,8 +36,8 @@ class ScopeEtablissement implements Scope
             return;
         }
 
-        throw new RuntimeException(
-            "Aucun établissement n'est défini dans le contexte de la requête : accès refusé à [{$model->getTable()}]. ".
+        throw new EtablissementNonResoluException(
+            "Aucun établissement résolu pour ce domaine : accès refusé à [{$model->getTable()}]. ".
             'Un traitement (job, commande artisan, seeder) qui a légitimement besoin de toutes les données doit '.
             "appeler explicitement [{$model->getTable()}]::pourTousEtablissements()."
         );

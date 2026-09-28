@@ -54,6 +54,12 @@ class StoreProduitRequest extends FormRequest
                 },
             ],
             'quantite_stock' => ['nullable', 'integer', 'min:0'],
+            // Pertinent seulement en mode interrupteur (restaurant) ; en
+            // mode compte, la disponibilité se déduit du stock (voir
+            // Produit::estDisponibleEnQuantite()). Accepté dans les deux cas
+            // plutôt que de le refuser selon le mode : ce serait dupliquer
+            // côté validation une règle qui vit déjà dans le modèle.
+            'disponible' => ['nullable', 'boolean'],
             'statut' => ['nullable', Rule::enum(StatutProduit::class)],
         ];
     }
