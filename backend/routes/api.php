@@ -20,9 +20,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deconnexion', [SessionController::class, 'destroy']);
     Route::get('/moi', [SessionController::class, 'moi'])->middleware('resoudre.etablissement');
 
-    // Pas de "resoudre.etablissement" ici : réservée au super-admin (voir
+    // Pas de "resoudre.etablissement" ici : réservées au super-admin (voir
     // EtablissementPolicy), qui n'a justement pas d'établissement courant.
+    // "sous-domaine-disponible" avant "{etablissement}" : sinon ce dernier
+    // capturerait le chemin littéral comme un id de route.
+    Route::get('/etablissements/sous-domaine-disponible', [EtablissementController::class, 'verifierSousDomaine']);
     Route::get('/etablissements', [EtablissementController::class, 'index']);
+    Route::post('/etablissements', [EtablissementController::class, 'store']);
+    Route::get('/etablissements/{etablissement}', [EtablissementController::class, 'show']);
+    Route::post('/etablissements/{etablissement}/suspendre', [EtablissementController::class, 'suspendre']);
+    Route::post('/etablissements/{etablissement}/reactiver', [EtablissementController::class, 'reactiver']);
 
     Route::middleware('resoudre.etablissement')->group(function () {
         Route::get('/produits', [ProduitController::class, 'index']);

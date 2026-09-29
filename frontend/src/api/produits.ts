@@ -106,3 +106,14 @@ export async function modifierProduit(id: number, payload: ProduitPayload): Prom
 export async function archiverProduit(id: number): Promise<void> {
   await client.delete(`/api/produits/${id}`)
 }
+
+/**
+ * Repasse un produit archivé en brouillon. Une mise à jour partielle
+ * (l'API accepte "statut" seul, voir UpdateProduitRequest) : pas besoin de
+ * renvoyer le reste du produit pour ce seul changement.
+ */
+export async function republierProduit(id: number): Promise<Produit> {
+  const { data } = await client.put<{ data: Produit }>(`/api/produits/${id}`, { statut: 'brouillon' })
+
+  return data.data
+}

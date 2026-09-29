@@ -1,23 +1,24 @@
 /**
  * Garde d'authentification : appelle /api/moi avant de rendre une route.
  * Redirige vers /connexion si la session est invalide (401), sinon monte
- * CoquilleApplication (en-tête) autour de la route demandée. Toutes les
+ * la coquille adaptée (en-tête) autour de la route demandée. Toutes les
  * routes protégées de App.tsx passent par ici.
  *
  * Cas particulier du super-admin : /api/moi renvoie etablissement: null
  * pour lui (il n'en a aucun — voir SessionController::moi() côté API).
  * Aucune des pages du back-office commerçant (produits, catégories...) n'a
  * de sens pour lui et elles échoueraient toutes en 400 (aucun
- * établissement à filtrer) : on monte directement son propre écran, quelle
- * que soit l'URL demandée, plutôt que de rendre la route qui matchait.
+ * établissement à filtrer) : on le confine à /etablissements/*, quelle que
+ * soit l'URL demandée.
  */
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useMoi } from '../hooks/useMoi'
 import { CoquilleApplication } from './CoquilleApplication'
-import { PageEtablissementsSuperAdmin } from '../pages/PageEtablissementsSuperAdmin'
+import { CoquilleSuperAdmin } from './CoquilleSuperAdmin'
 
 export function RouteProtegee() {
   const { data: moi, isPending, isError } = useMoi()
+  const location = useLocation()
 
   if (isPending) {
     return (
@@ -34,7 +35,15 @@ export function RouteProtegee() {
   }
 
   if (moi.etablissement === null) {
-    return <PageEtablissementsSuperAdmin moi={moi} />
+    if (!location.pathname.startsWith('/etablissements')) {
+      return <Navigate to="/etablissements" replace />
+    }
+
+    return (
+      <CoquilleSuperAdmin moi={moi}>
+        <Outlet />
+      </CoquilleSuperAdmin>
+    )
   }
 
   return (

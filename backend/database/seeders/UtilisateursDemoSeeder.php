@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * Trois comptes de démo, un mot de passe identique en clair (données de
+ * Quatre comptes de démo, un mot de passe identique en clair (données de
  * démo uniquement, jamais en production) : voir la table de l'Étape 1.
  * S'appuie sur les établissements déjà créés par EtablissementsDemoSeeder
  * (slugs "chez-awa" et "maquis-du-port") — à exécuter après lui.
@@ -57,6 +57,21 @@ class UtilisateursDemoSeeder extends Seeder
             'etablissement_id' => $maquisDuPort->id,
             'utilisateur_id' => $yao->id,
             'role_id' => $roleOperateur,
+            'statut' => 'actif',
+        ]);
+
+        // Admin du restaurant : sans elle, impossible de tester le
+        // formulaire produit en mode interrupteur avec un compte qui a
+        // gerer_catalogue — Awa est sur une boutique, Yao n'est qu'opérateur.
+        $adjoua = User::factory()->create([
+            'name' => 'Adjoua Kone',
+            'email' => 'adjoua@maquis-du-port.test',
+            'password' => self::MOT_DE_PASSE,
+        ]);
+        EtablissementUtilisateur::create([
+            'etablissement_id' => $maquisDuPort->id,
+            'utilisateur_id' => $adjoua->id,
+            'role_id' => $roleAdminEtablissement,
             'statut' => 'actif',
         ]);
     }

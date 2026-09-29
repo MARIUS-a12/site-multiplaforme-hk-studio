@@ -2,12 +2,15 @@
  * Écran principal du back-office — route protégée "/". Bande de
  * statistiques (publiés/en rupture/brouillons), barre de recherche et de
  * filtres, puis la liste des produits elle-même : cartes empilées sous
- * 768px, tableau triable au-dessus. Chaque ligne mène à la modification du
- * produit ; la création passe par le bouton "Ajouter un produit".
+ * 768px, tableau triable au-dessus. Chaque ligne porte ses propres actions
+ * (modifier, archiver/republier) ; la création passe par le bouton
+ * "Ajouter un produit".
  */
-import { ArrowDown, ArrowUp, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { archiverProduit, republierProduit } from '../api/produits'
 import { BadgeStatut } from '../components/BadgeStatut'
 import { BandeauSucces } from '../components/BandeauSucces'
 import { BandeStatistiques } from '../components/BandeStatistiques'
@@ -21,6 +24,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useMoi } from '../hooks/useMoi'
 import { useProduits } from '../hooks/useProduits'
 import { useValeurDifferee } from '../hooks/useValeurDifferee'
+import { confirmerArchivageProduit } from '../lib/confirmations'
 import { formaterMontant } from '../lib/formatage'
 import type { ColonneTri, Produit, StatutProduit } from '../api/produits'
 
@@ -37,6 +41,7 @@ export function PageListeProduits() {
   const peutGererCatalogue = moi?.permissions.includes('gerer_catalogue') ?? false
   const navigate = useNavigate()
   const location = useLocation()
+  const queryClient = useQueryClient()
 
   // Capturé une seule fois, à l'arrivée sur cette page (création,
   // modification ou archivage réussis redirigent ici avec ce message dans
@@ -59,6 +64,37 @@ export function PageListeProduits() {
     direction,
     page,
   })
+
+  function invaliderApresAction() {
+    queryClient.invalidateQueries({ queryKey: ['produits'] })
+    queryClient.invalidateQueries({ queryKey: ['produits-stats'] })
+    queryClient.invalidateQueries({ queryKey: ['categories'] })
+  }
+
+  const archivage = useMutation({ mutationFn: (id: number) => archiverProduit(id) })
+  const republication = useMutation({ mutationFn: (id: number) => republierProduit(id) })
+
+  function demanderArchivage(produit: Produit) {
+    if (!confirmerArchivageProduit()) {
+      return
+    }
+
+    archivage.mutate(produit.id, {
+      onSuccess: () => {
+        invaliderApresAction()
+        setMessageSucces(`« ${produit.nom} » a été archivé.`)
+      },
+    })
+  }
+
+  function republier(produit: Produit) {
+    republication.mutate(produit.id, {
+      onSuccess: () => {
+        invaliderApresAction()
+        setMessageSucces(`« ${produit.nom} » a été republié.`)
+      },
+    })
+  }
 
   function nomCategorie(produit: Produit): string | null {
     return categories?.find((c) => c.id === produit.categorie_id)?.nom ?? null
@@ -121,17 +157,15 @@ export function PageListeProduits() {
 
       {!isPending && !isError && data && data.data.length > 0 && (
         <>
-          {/* Mobile : une carte par produit. */}
+          {/* Mobile : une carte par produit, actions en bas. */}
           <ul className="space-y-3 md:hidden">
             {data.data.map((produit) => {
               const categorie = nomCategorie(produit)
+              const estArchive = produit.statut === 'archive'
 
               return (
-                <li key={produit.id}>
-                  <Link
-                    to={`/produits/${produit.id}/modifier`}
-                    className="flex items-start gap-3 border border-bordure bg-surface p-4 transition-colors duration-150 hover:bg-surface-alt"
-                  >
+                <li key={produit.id} className="border border-bordure bg-surface p-4">
+                  <div className="flex items-start gap-3">
                     <CarreInitiale nom={produit.nom} taille={48} />
                     <div className="min-w-0 flex-1">
                       <span className="block truncate text-corps font-semibold text-texte">
@@ -148,7 +182,40 @@ export function PageListeProduits() {
                         </span>
                       </div>
                     </div>
-                  </Link>
+                  </div>
+
+                  {peutGererCatalogue && (
+                    <div className="mt-3 flex gap-2 border-t border-bordure pt-3">
+                      <Link
+                        to={`/produits/${produit.id}/modifier`}
+                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte transition-colors duration-150 hover:bg-surface-alt active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+                      >
+                        <Pencil aria-hidden="true" size={20} strokeWidth={1.5} />
+                        Modifier
+                      </Link>
+                      {estArchive ? (
+                        <button
+                          type="button"
+                          onClick={() => republier(produit)}
+                          disabled={republication.isPending}
+                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-primaire text-corps font-medium text-primaire transition-colors duration-150 hover:bg-primaire/10 active:bg-primaire/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />
+                          Republier
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => demanderArchivage(produit)}
+                          disabled={archivage.isPending}
+                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-danger text-corps font-medium text-danger transition-colors duration-150 hover:bg-danger/10 active:bg-danger/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Archive aria-hidden="true" size={20} strokeWidth={1.5} />
+                          Archiver
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </li>
               )
             })}
@@ -173,27 +240,23 @@ export function PageListeProduits() {
                   direction={direction}
                   onClick={() => trierPar('date')}
                 />
+                {peutGererCatalogue && (
+                  <th className="border-b border-bordure px-4 py-2 font-medium">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
               {data.data.map((produit) => {
                 const categorie = nomCategorie(produit)
+                const estArchive = produit.statut === 'archive'
 
                 return (
-                  <tr
-                    key={produit.id}
-                    onClick={() => navigate(`/produits/${produit.id}/modifier`)}
-                    className="cursor-pointer transition-colors duration-150 hover:bg-surface-alt"
-                  >
+                  <tr key={produit.id} className="transition-colors duration-150 hover:bg-surface-alt">
                     <td className="border-b border-bordure px-4 py-3">
-                      <Link
-                        to={`/produits/${produit.id}/modifier`}
-                        className="flex items-center gap-3"
-                        onClick={(evenement) => evenement.stopPropagation()}
-                      >
+                      <div className="flex items-center gap-3">
                         <CarreInitiale nom={produit.nom} taille={40} />
                         <span className="text-corps font-semibold text-texte">{produit.nom}</span>
-                      </Link>
+                      </div>
                     </td>
                     <td className="border-b border-bordure px-4 py-3 tabular-nums text-corps font-medium text-texte">
                       {formaterMontant(produit.prix)}
@@ -210,6 +273,43 @@ export function PageListeProduits() {
                     <td className="border-b border-bordure px-4 py-3 tabular-nums text-petit text-texte-secondaire">
                       {new Date(produit.created_at).toLocaleDateString('fr-FR')}
                     </td>
+                    {peutGererCatalogue && (
+                      <td className="border-b border-bordure px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <Link
+                            to={`/produits/${produit.id}/modifier`}
+                            title="Modifier"
+                            aria-label={`Modifier ${produit.nom}`}
+                            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-texte focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+                          >
+                            <Pencil aria-hidden="true" size={20} strokeWidth={1.5} />
+                          </Link>
+                          {estArchive ? (
+                            <button
+                              type="button"
+                              title="Republier"
+                              aria-label={`Republier ${produit.nom}`}
+                              onClick={() => republier(produit)}
+                              disabled={republication.isPending}
+                              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-primaire focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Archiver"
+                              aria-label={`Archiver ${produit.nom}`}
+                              onClick={() => demanderArchivage(produit)}
+                              disabled={archivage.isPending}
+                              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              <Archive aria-hidden="true" size={20} strokeWidth={1.5} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 )
               })}

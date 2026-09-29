@@ -16,7 +16,10 @@ import { CLE_MOI } from './hooks/useMoi'
 import { declencherRedirectionConnexionUneSeuleFois } from './lib/gardeRedirectionConnexion'
 import { PageCategories } from './pages/PageCategories'
 import { PageConnexionUtilisateur } from './pages/PageConnexionUtilisateur'
+import { PageFicheEtablissement } from './pages/PageFicheEtablissement'
+import { PageFormulaireEtablissement } from './pages/PageFormulaireEtablissement'
 import { PageFormulaireProduit } from './pages/PageFormulaireProduit'
+import { PageListeEtablissements } from './pages/PageListeEtablissements'
 import { PageListeProduits } from './pages/PageListeProduits'
 
 /**
@@ -51,6 +54,12 @@ const router = createBrowserRouter([
   {
     element: <RouteProtegee />,
     children: [
+      // Espace super-admin (voir RouteProtegee, qui y confine tout
+      // utilisateur sans établissement).
+      { path: '/etablissements', element: <PageListeEtablissements /> },
+      { path: '/etablissements/nouveau', element: <PageFormulaireEtablissement /> },
+      { path: '/etablissements/:id', element: <PageFicheEtablissement /> },
+      // Espace commerçant.
       { path: '/', element: <PageListeProduits /> },
       { path: '/produits/nouveau', element: <PageFormulaireProduit /> },
       { path: '/produits/:id/modifier', element: <PageFormulaireProduit /> },

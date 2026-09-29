@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * La fiche d'un établissement : informations, domaines, et utilisateurs
+ * rattachés avec leur rôle. Ne renvoie jamais de mot de passe — seule la
+ * réponse de création (EtablissementController::store()) en porte un, via
+ * ->additional(), jamais via une Resource.
+ */
+class EtablissementDetailResource extends JsonResource
+{
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'nom' => $this->nom,
+            'type' => $this->type,
+            'statut' => $this->statut,
+            'email' => $this->email,
+            'telephone' => $this->telephone,
+            'created_at' => $this->created_at,
+            'domaines' => $this->domaines->map(fn ($domaine) => [
+                'id' => $domaine->id,
+                'hote' => $domaine->hote,
+                'est_principal' => $domaine->est_principal,
+                'statut' => $domaine->statut,
+            ]),
+            'utilisateurs' => $this->appartenances->map(fn ($appartenance) => [
+                'id' => $appartenance->utilisateur->id,
+                'nom' => $appartenance->utilisateur->name,
+                'email' => $appartenance->utilisateur->email,
+                'role' => $appartenance->role->nom,
+                'statut' => $appartenance->statut,
+            ]),
+        ];
+    }
+}

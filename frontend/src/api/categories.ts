@@ -40,3 +40,15 @@ export async function creerCategorie(nom: string): Promise<Categorie> {
 export async function archiverCategorie(id: number): Promise<void> {
   await client.delete(`/api/categories/${id}`)
 }
+
+/**
+ * Repasse une catégorie archivée en actif. Réutilise l'endpoint de
+ * modification existant (statut seul — UpdateCategorieRequest l'accepte en
+ * mise à jour partielle) : pas de route dédiée nécessaire, contrairement à
+ * un produit dont le statut "archive" a des règles propres.
+ */
+export async function reactiverCategorie(id: number): Promise<Categorie> {
+  const { data } = await client.put<{ data: Categorie }>(`/api/categories/${id}`, { statut: 'actif' })
+
+  return data.data
+}

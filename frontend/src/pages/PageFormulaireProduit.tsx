@@ -33,6 +33,7 @@ import { useCategories } from '../hooks/useCategories'
 import { useMoi } from '../hooks/useMoi'
 import { useProduit } from '../hooks/useProduit'
 import { useProtectionPerteTravail } from '../hooks/useProtectionPerteTravail'
+import { confirmerArchivageProduit } from '../lib/confirmations'
 import { allerAuPremierChampEnErreur, extraireErreursChamps } from '../lib/erreursValidation'
 
 const ORDRE_CHAMPS = [
@@ -218,12 +219,7 @@ function FormulaireProduit({
   }
 
   function demanderArchivage() {
-    const confirme = window.confirm(
-      'Ce produit ne sera plus visible sur votre boutique, mais son historique de ventes est conservé. ' +
-        'Vous pourrez le republier plus tard.\n\nArchiver ce produit ?',
-    )
-
-    if (confirme) {
+    if (confirmerArchivageProduit()) {
       archivage.mutate()
     }
   }
