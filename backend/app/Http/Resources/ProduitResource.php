@@ -11,6 +11,11 @@ class ProduitResource extends JsonResource
      * etablissement_id n'apparaît jamais ici : c'est une colonne interne de
      * tenancy, jamais une information utile au client (voir Étape 2, règle
      * n°6).
+     *
+     * "medias" (triées par ordre, la première est la principale) n'apparaît
+     * que si la relation a été chargée en amont (voir ProduitController::
+     * index/show, qui l'eager-loadent systématiquement) — whenLoaded() évite
+     * sinon une requête N+1 silencieuse.
      */
     public function toArray(Request $request): array
     {
@@ -29,6 +34,7 @@ class ProduitResource extends JsonResource
             'disponible' => $this->disponible,
             'statut' => $this->statut,
             'publie_le' => $this->publie_le,
+            'medias' => MediaResource::collection($this->whenLoaded('medias')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

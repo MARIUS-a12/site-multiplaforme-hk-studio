@@ -5,6 +5,7 @@
  * répercuter.
  */
 import { client } from '../lib/client'
+import type { Media } from './medias'
 
 export type StatutProduit = 'brouillon' | 'publie' | 'archive'
 export type ModeStock = 'compte' | 'interrupteur'
@@ -24,6 +25,10 @@ export type Produit = {
   disponible: boolean
   statut: StatutProduit
   publie_le: string | null
+  // Triées par ordre, la première est la photo principale. Toujours présent
+  // (jamais absent) : ProduitController charge systématiquement la
+  // relation, voir sa docblock.
+  medias: Media[]
   created_at: string
   updated_at: string
 }

@@ -1,3 +1,4 @@
+import type { VarianteMedia } from '../api/medias'
 import { classeFondAvatar, initiale } from '../lib/couleurAvatar'
 
 const TAILLES = {
@@ -6,13 +7,29 @@ const TAILLES = {
 } as const
 
 /**
- * Vignette carrée avec l'initiale du nom, en attendant une vraie photo.
- * L'upload d'images n'existe pas encore (arrive avec la création de
- * produit) : ce composant est le seul endroit à changer plus tard pour
- * afficher une <img> quand une photo est disponible, sans toucher à ses
- * appelants (liste produits, en-tête).
+ * Vignette carrée : la photo principale du produit quand il en a une,
+ * sinon l'initiale de son nom en repli. C'est le seul endroit à changer
+ * pour ça — liste produits et en-tête n'ont rien à savoir de la présence ou
+ * non d'une photo.
  */
-export function CarreInitiale({ nom, taille }: { nom: string; taille: 40 | 48 }) {
+export function CarreInitiale({
+  nom,
+  taille,
+  photo = null,
+}: {
+  nom: string
+  taille: 40 | 48
+  photo?: VarianteMedia | null
+}) {
+  if (photo && (photo.webp || photo.jpg)) {
+    return (
+      <picture className={`block shrink-0 overflow-hidden rounded ${TAILLES[taille]}`}>
+        {photo.webp && <source srcSet={photo.webp} type="image/webp" />}
+        <img src={photo.jpg ?? photo.webp ?? undefined} alt="" className="h-full w-full object-cover" />
+      </picture>
+    )
+  }
+
   return (
     <span
       aria-hidden="true"

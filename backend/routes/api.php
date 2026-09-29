@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CategorieController;
 use App\Http\Controllers\Api\CommandeController;
 use App\Http\Controllers\Api\EtablissementController;
+use App\Http\Controllers\Api\MediaProduitController;
 use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
 use App\Http\Controllers\Api\SessionController;
@@ -37,6 +38,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/produits/{produit}', [ProduitController::class, 'show']);
         Route::put('/produits/{produit}', [ProduitController::class, 'update']);
         Route::delete('/produits/{produit}', [ProduitController::class, 'destroy']);
+
+        Route::put('/produits/{produit}/medias/ordre', [MediaProduitController::class, 'reordonner']);
+        Route::post('/produits/{produit}/medias', [MediaProduitController::class, 'store']);
+        Route::delete('/produits/{produit}/medias/{media}', [MediaProduitController::class, 'destroy']);
 
         Route::get('/categories', [CategorieController::class, 'index']);
         Route::post('/categories', [CategorieController::class, 'store']);

@@ -29,6 +29,7 @@ import { ComboboxCategorie } from '../components/ComboboxCategorie'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
 import { GroupeSegmente } from '../components/GroupeSegmente'
+import { ZoneEnvoiPhotos } from '../components/ZoneEnvoiPhotos'
 import { useCategories } from '../hooks/useCategories'
 import { useMoi } from '../hooks/useMoi'
 import { useProduit } from '../hooks/useProduit'
@@ -127,6 +128,9 @@ function FormulaireProduit({
 }) {
   const estModification = produitId !== null
   const produitEstArchive = produitExistant?.statut === 'archive'
+
+  const { data: moi } = useMoi()
+  const peutGererCatalogue = moi?.permissions.includes('gerer_catalogue') ?? false
 
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -317,6 +321,16 @@ function FormulaireProduit({
           erreur={erreurs.reference}
         />
 
+        {estModification && peutGererCatalogue ? (
+          <ZoneEnvoiPhotos produitId={produitId as number} medias={produitExistant?.medias ?? []} />
+        ) : (
+          !estModification && (
+            <p className="text-petit text-texte-secondaire">
+              Enregistrez d'abord le produit pour pouvoir y ajouter des photos.
+            </p>
+          )
+        )}
+
         <BlocStock
           modeStock={modeStock}
           estModification={estModification}
@@ -336,7 +350,8 @@ function FormulaireProduit({
 
         {produitEstArchive ? (
           <p className="text-petit text-texte-secondaire">
-            Ce produit est archivé ; la republication arrivera dans une prochaine étape.
+            Ce produit est archivé. Pour le republier, utilisez le bouton « Republier » depuis la liste des
+            produits.
           </p>
         ) : (
           <div>

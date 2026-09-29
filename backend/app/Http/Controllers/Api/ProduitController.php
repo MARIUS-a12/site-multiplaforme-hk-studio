@@ -38,6 +38,7 @@ class ProduitController extends Controller
         $direction = $request->string('direction', 'desc')->value() === 'asc' ? 'asc' : 'desc';
 
         $produits = Produit::query()
+            ->with(['medias' => fn ($requete) => $requete->orderByPivot('ordre')])
             ->when($request->filled('recherche'), fn ($requete) => $requete->where('nom', 'like', '%'.$request->string('recherche').'%'))
             ->when($request->filled('categorie_id'), fn ($requete) => $requete->where('categorie_id', $request->integer('categorie_id')))
             ->when($request->filled('statut'), fn ($requete) => $requete->where('statut', $request->string('statut')->value()))
@@ -50,6 +51,7 @@ class ProduitController extends Controller
     public function store(StoreProduitRequest $request): JsonResponse
     {
         $produit = Produit::create($request->validated());
+        $produit->load('medias');
 
         return (new ProduitResource($produit))->response()->setStatusCode(201);
     }
@@ -58,12 +60,15 @@ class ProduitController extends Controller
     {
         Gate::authorize('view', $produit);
 
+        $produit->load(['medias' => fn ($requete) => $requete->orderByPivot('ordre')]);
+
         return new ProduitResource($produit);
     }
 
     public function update(UpdateProduitRequest $request, Produit $produit): ProduitResource
     {
         $produit->update($request->validated());
+        $produit->load(['medias' => fn ($requete) => $requete->orderByPivot('ordre')]);
 
         return new ProduitResource($produit);
     }

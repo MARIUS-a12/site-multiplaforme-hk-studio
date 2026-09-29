@@ -166,7 +166,7 @@ export function PageListeProduits() {
               return (
                 <li key={produit.id} className="border border-bordure bg-surface p-4">
                   <div className="flex items-start gap-3">
-                    <CarreInitiale nom={produit.nom} taille={48} />
+                    <CarreInitiale nom={produit.nom} taille={48} photo={produit.medias[0]?.vignette} />
                     <div className="min-w-0 flex-1">
                       <span className="block truncate text-corps font-semibold text-texte">
                         {produit.nom}
@@ -254,7 +254,7 @@ export function PageListeProduits() {
                   <tr key={produit.id} className="transition-colors duration-150 hover:bg-surface-alt">
                     <td className="border-b border-bordure px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <CarreInitiale nom={produit.nom} taille={40} />
+                        <CarreInitiale nom={produit.nom} taille={40} photo={produit.medias[0]?.vignette} />
                         <span className="text-corps font-semibold text-texte">{produit.nom}</span>
                       </div>
                     </td>
