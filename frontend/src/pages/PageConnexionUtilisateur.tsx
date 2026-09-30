@@ -1,7 +1,12 @@
 /**
- * Écran de connexion — seule route publique de l'app (chemin /connexion).
+ * Écran de connexion du back-office (chemin /admin/connexion) — l'une des
+ * deux routes publiques de l'app avec la vitrine elle-même. Volontairement
+ * hors du groupe RouteProtegee (voir App.tsx) : la garde d'authentification
+ * redirige VERS cette page, elle ne peut donc pas en dépendre elle-même.
  * Formulaire email / mot de passe qui appelle POST /api/connexion (voir
- * api/auth.ts). Une fois connecté, RouteProtegee laisse passer vers /.
+ * api/auth.ts). Une fois connecté, redirige vers /admin/produits
+ * (RouteProtegee y confine ensuite le super-admin vers /etablissements si
+ * besoin).
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
@@ -46,7 +51,7 @@ export function PageConnexionUtilisateur() {
     onSuccess: async () => {
       reinitialiserGardeRedirection()
       await queryClient.invalidateQueries({ queryKey: CLE_MOI })
-      navigate('/', { replace: true })
+      navigate('/admin/produits', { replace: true })
     },
   })
 

@@ -1,6 +1,6 @@
 /**
  * Garde d'authentification : appelle /api/moi avant de rendre une route.
- * Redirige vers /connexion si la session est invalide (401), sinon monte
+ * Redirige vers /admin/connexion si la session est invalide (401), sinon monte
  * la coquille adaptée (en-tête) autour de la route demandée. Toutes les
  * routes protégées de App.tsx passent par ici.
  *
@@ -31,7 +31,7 @@ export function RouteProtegee() {
   // /api/moi renvoie 401 quand la session n'est plus valide (jamais connecté,
   // session expirée) : direction l'écran de connexion.
   if (isError || !moi) {
-    return <Navigate to="/connexion" replace />
+    return <Navigate to="/admin/connexion" replace />
   }
 
   if (moi.etablissement === null) {

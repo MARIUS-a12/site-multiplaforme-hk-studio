@@ -1,5 +1,6 @@
 /**
- * Garde-fou structurel contre une boucle de redirections vers /connexion.
+ * Garde-fou structurel contre une boucle de redirections vers
+ * /admin/connexion.
  *
  * Post-mortem : un 401 sur /api/moi déclenchait `removeQueries(['moi'])`
  * depuis le gestionnaire d'erreur global — y compris pour la requête /moi

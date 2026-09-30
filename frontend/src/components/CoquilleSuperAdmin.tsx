@@ -20,7 +20,7 @@ export function CoquilleSuperAdmin({ moi, children }: { moi: Moi; children: Reac
     mutationFn: deconnecter,
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: CLE_MOI })
-      navigate('/connexion', { replace: true })
+      navigate('/admin/connexion', { replace: true })
     },
   })
 

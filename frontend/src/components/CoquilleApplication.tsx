@@ -19,7 +19,7 @@ export function CoquilleApplication({ moi, children }: { moi: Moi; children: Rea
   async function seDeconnecter() {
     await deconnecter()
     queryClient.removeQueries({ queryKey: CLE_MOI })
-    navigate('/connexion', { replace: true })
+    navigate('/admin/connexion', { replace: true })
   }
 
   const nomEtablissement = moi.etablissement?.nom ?? 'Back-office'

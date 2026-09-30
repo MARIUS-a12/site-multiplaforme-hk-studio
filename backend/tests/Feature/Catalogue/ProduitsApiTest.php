@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Catalogue;
 
+use App\Enums\TypeOffre;
 use App\Models\Categorie;
 use App\Models\Etablissement;
 use App\Models\EtablissementUtilisateur;
@@ -384,5 +385,25 @@ class ProduitsApiTest extends TestCase
         $renommage->assertStatus(200);
         $renommage->assertJsonPath('data.nom', 'Attiéké Poisson Fumé');
         $renommage->assertJsonPath('data.slug', 'attieke-poisson');
+    }
+
+    /**
+     * Étape 6A, test n°9 : type_offre n'est ni validé ni accepté par
+     * StoreProduitRequest (aucun formulaire ne l'expose) — un produit créé
+     * sans le préciser doit donc porter la valeur par défaut du modèle.
+     */
+    public function test_12_type_offre_par_defaut_vaut_bien(): void
+    {
+        $this->seed();
+        $this->connecte('chez-awa.localhost', 'awa@chez-awa.test');
+
+        $creation = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/produits', [
+            'nom' => 'Sans type_offre précisé',
+            'prix' => 1500,
+        ]);
+        $creation->assertStatus(201);
+
+        $produit = Produit::pourTousEtablissements()->findOrFail($creation->json('data.id'));
+        $this->assertSame(TypeOffre::Bien, $produit->type_offre);
     }
 }

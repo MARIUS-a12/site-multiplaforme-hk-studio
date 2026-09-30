@@ -1,5 +1,6 @@
 /**
- * Écran principal du back-office — route protégée "/". Bande de
+ * Écran principal du back-office — route protégée "/admin/produits"
+ * ("/admin" bare redirige ici, voir App.tsx). Bande de
  * statistiques (publiés/en rupture/brouillons), barre de recherche et de
  * filtres, puis la liste des produits elle-même : cartes empilées sous
  * 768px, tableau triable au-dessus. Chaque ligne porte ses propres actions
@@ -118,7 +119,7 @@ export function PageListeProduits() {
         <h1 className="text-titre-page font-semibold text-texte">Produits</h1>
         {peutGererCatalogue && (
           <Link
-            to="/produits/nouveau"
+            to="/admin/produits/nouveau"
             className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
           >
             <Plus aria-hidden="true" size={20} strokeWidth={1.5} />
@@ -142,7 +143,7 @@ export function PageListeProduits() {
             setPage(1)
           }}
         />
-        <Link to="/categories" className="text-petit text-primaire underline">
+        <Link to="/admin/categories" className="text-petit text-primaire underline">
           Gérer les catégories
         </Link>
       </div>
@@ -187,7 +188,7 @@ export function PageListeProduits() {
                   {peutGererCatalogue && (
                     <div className="mt-3 flex gap-2 border-t border-bordure pt-3">
                       <Link
-                        to={`/produits/${produit.id}/modifier`}
+                        to={`/admin/produits/${produit.id}/modifier`}
                         className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte transition-colors duration-150 hover:bg-surface-alt active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
                       >
                         <Pencil aria-hidden="true" size={20} strokeWidth={1.5} />
@@ -277,7 +278,7 @@ export function PageListeProduits() {
                       <td className="border-b border-bordure px-4 py-3">
                         <div className="flex items-center gap-1">
                           <Link
-                            to={`/produits/${produit.id}/modifier`}
+                            to={`/admin/produits/${produit.id}/modifier`}
                             title="Modifier"
                             aria-label={`Modifier ${produit.nom}`}
                             className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-texte focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"

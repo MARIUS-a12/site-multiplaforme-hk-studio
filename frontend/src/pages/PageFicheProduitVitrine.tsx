@@ -1,0 +1,173 @@
+/**
+ * Écran public "/produit/:id" — fiche complète d'un produit publié, vue
+ * par n'importe quel visiteur non connecté. Galerie de photos (trois
+ * formats), description entière, sélection de variante s'il y en a, et les
+ * trois actions d'achat (voir BoutonsAchatVitrine). Un identifiant qui ne
+ * correspond à aucun produit publié — brouillon, archivé, ou d'un autre
+ * établissement — affiche l'état "introuvable", jamais un détail sur la
+ * raison réelle (voir VitrineProduitController côté API).
+ */
+import { useState } from 'react'
+import { ImageOff } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import type { VarianteVitrine } from '../api/vitrine'
+import { BoutonRetour } from '../components/BoutonRetour'
+import { BoutonsAchatVitrine } from '../components/BoutonsAchatVitrine'
+import { EtatErreur } from '../components/EtatErreur'
+import { useProduitVitrine } from '../hooks/useProduitVitrine'
+import { formaterMontant } from '../lib/formatage'
+
+export function PageFicheProduitVitrine() {
+  const { id } = useParams()
+  const produitId = id ? Number(id) : null
+
+  const { data: produit, isPending, isError, error, refetch } = useProduitVitrine(produitId)
+  const [indexPhoto, setIndexPhoto] = useState(0)
+  const [varianteChoisie, setVarianteChoisie] = useState<VarianteVitrine | null>(null)
+
+  if (isPending) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-4">
+        <div className="aspect-square w-full animate-pulse rounded bg-surface-alt" />
+        <div className="h-6 w-2/3 animate-pulse rounded bg-surface-alt" />
+        <div className="h-5 w-1/3 animate-pulse rounded bg-surface-alt" />
+      </div>
+    )
+  }
+
+  if (isError || !produit) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <BoutonRetour vers="/" />
+        <EtatErreur erreur={error} onReessayer={() => refetch()} />
+      </div>
+    )
+  }
+
+  const photoActive = produit.photos[indexPhoto] ?? produit.photos[0] ?? null
+  const prixAffiche = varianteChoisie?.prix ?? produit.prix
+  const disponibleAffiche = varianteChoisie ? varianteChoisie.disponible : produit.disponible
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-6 pb-4">
+      <BoutonRetour vers="/" />
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <div className="aspect-square w-full overflow-hidden rounded border border-bordure bg-surface-alt">
+            {photoActive ? (
+              <picture>
+                {photoActive.grande.webp && (
+                  <source
+                    type="image/webp"
+                    srcSet={[
+                      photoActive.moyenne.webp ? `${photoActive.moyenne.webp} 600w` : null,
+                      photoActive.grande.webp ? `${photoActive.grande.webp} 1200w` : null,
+                    ]
+                      .filter(Boolean)
+                      .join(', ')}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                )}
+                <img
+                  src={photoActive.grande.jpg ?? photoActive.moyenne.jpg ?? undefined}
+                  alt={produit.nom}
+                  width={1200}
+                  height={1200}
+                  className="h-full w-full object-cover"
+                />
+              </picture>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <ImageOff aria-hidden="true" size={48} strokeWidth={1.5} className="text-texte-secondaire" />
+              </div>
+            )}
+          </div>
+
+          {produit.photos.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto">
+              {produit.photos.map((photo, index) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => setIndexPhoto(index)}
+                  aria-label={`Photo ${index + 1}`}
+                  aria-pressed={index === indexPhoto}
+                  className={`h-16 w-16 shrink-0 overflow-hidden rounded border-2 transition-colors duration-150 ${
+                    index === indexPhoto ? 'border-primaire' : 'border-transparent'
+                  }`}
+                >
+                  <img
+                    src={photo.vignette.jpg ?? photo.vignette.webp ?? undefined}
+                    alt=""
+                    loading="lazy"
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            {produit.categorie && (
+              <p className="text-petit text-texte-secondaire">{produit.categorie.nom}</p>
+            )}
+            <h1 className="text-titre-page font-semibold text-texte">{produit.nom}</h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-titre-section font-semibold tabular-nums text-texte">
+              {formaterMontant(prixAffiche)}
+            </span>
+            {!disponibleAffiche && (
+              <span className="rounded bg-texte px-2 py-1 text-petit font-medium text-surface">Épuisé</span>
+            )}
+          </div>
+
+          {produit.description && (
+            <p className="whitespace-pre-line text-corps text-texte-secondaire">{produit.description}</p>
+          )}
+
+          {produit.variantes.length > 0 && (
+            <div>
+              <span className="mb-1.5 block text-petit font-medium text-texte">Choisissez une variante</span>
+              <div className="flex flex-wrap gap-2">
+                {produit.variantes.map((variante) => {
+                  const estChoisie = varianteChoisie?.id === variante.id
+
+                  return (
+                    <button
+                      key={variante.id}
+                      type="button"
+                      onClick={() => setVarianteChoisie(variante)}
+                      aria-pressed={estChoisie}
+                      className={`h-11 rounded border px-3 text-corps font-medium transition-colors duration-150 ${
+                        estChoisie
+                          ? 'border-primaire bg-primaire text-surface'
+                          : 'border-bordure text-texte hover:bg-surface-alt'
+                      } ${variante.disponible ? '' : 'opacity-50'}`}
+                    >
+                      {variante.nom}
+                      {!variante.disponible && ' · Épuisé'}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          <BoutonsAchatVitrine
+            produitId={produit.id}
+            disponible={produit.disponible}
+            variantes={produit.variantes}
+            varianteChoisie={varianteChoisie}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}

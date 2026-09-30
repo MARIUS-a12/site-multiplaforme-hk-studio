@@ -8,6 +8,8 @@ use App\Http\Requests\StoreProduitRequest;
 use App\Http\Requests\UpdateProduitRequest;
 use App\Http\Resources\ProduitResource;
 use App\Models\Produit;
+use App\Support\Tenancy\ContexteEtablissement;
+use App\Support\Vitrine\CacheVitrine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -52,6 +54,7 @@ class ProduitController extends Controller
     {
         $produit = Produit::create($request->validated());
         $produit->load('medias');
+        $this->invaliderVitrine($produit);
 
         return (new ProduitResource($produit))->response()->setStatusCode(201);
     }
@@ -69,6 +72,7 @@ class ProduitController extends Controller
     {
         $produit->update($request->validated());
         $produit->load(['medias' => fn ($requete) => $requete->orderByPivot('ordre')]);
+        $this->invaliderVitrine($produit);
 
         return new ProduitResource($produit);
     }
@@ -83,7 +87,19 @@ class ProduitController extends Controller
         Gate::authorize('delete', $produit);
 
         $produit->update(['statut' => StatutProduit::Archive]);
+        $this->invaliderVitrine($produit);
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Toute écriture sur un produit (création, modification, archivage)
+     * peut changer ce que montre la vitrine publique de cet établissement :
+     * voir CacheVitrine, dont l'invalidation vide en une fois toutes les
+     * clés (liste paginée, fiche, catégories) sans avoir à les énumérer.
+     */
+    private function invaliderVitrine(Produit $produit): void
+    {
+        CacheVitrine::invalider($produit->etablissement_id ?? app(ContexteEtablissement::class)->id());
     }
 }

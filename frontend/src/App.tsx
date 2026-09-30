@@ -1,7 +1,8 @@
 /**
  * Racine de l'app : fournisseur react-query (cache des appels API) +
- * routeur. Une seule route publique (/connexion) ; tout le reste passe par
- * RouteProtegee, qui vérifie la session avant de rendre la page demandée.
+ * routeur. L'arbre de routes lui-même vit dans routes.tsx (voir sa
+ * docblock pour le partage vitrine publique / back-office protégé) — ce
+ * fichier ne construit que le routeur et les fournisseurs qui l'entourent.
  *
  * Routeur en mode "data" (createBrowserRouter), pas <BrowserRouter> seul :
  * la protection contre la perte de travail du formulaire produit
@@ -10,17 +11,10 @@
  */
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
-import { RouteProtegee } from './components/RouteProtegee'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { CLE_MOI } from './hooks/useMoi'
 import { declencherRedirectionConnexionUneSeuleFois } from './lib/gardeRedirectionConnexion'
-import { PageCategories } from './pages/PageCategories'
-import { PageConnexionUtilisateur } from './pages/PageConnexionUtilisateur'
-import { PageFicheEtablissement } from './pages/PageFicheEtablissement'
-import { PageFormulaireEtablissement } from './pages/PageFormulaireEtablissement'
-import { PageFormulaireProduit } from './pages/PageFormulaireProduit'
-import { PageListeEtablissements } from './pages/PageListeEtablissements'
-import { PageListeProduits } from './pages/PageListeProduits'
+import { routes } from './routes'
 
 /**
  * Un refus (403), une ressource introuvable (404) ou des identifiants
@@ -49,25 +43,7 @@ function delaiReessai(nombreEchecs: number): number {
   return Math.min(1000 * 2 ** nombreEchecs, 30000)
 }
 
-const router = createBrowserRouter([
-  { path: '/connexion', element: <PageConnexionUtilisateur /> },
-  {
-    element: <RouteProtegee />,
-    children: [
-      // Espace super-admin (voir RouteProtegee, qui y confine tout
-      // utilisateur sans établissement).
-      { path: '/etablissements', element: <PageListeEtablissements /> },
-      { path: '/etablissements/nouveau', element: <PageFormulaireEtablissement /> },
-      { path: '/etablissements/:id', element: <PageFicheEtablissement /> },
-      // Espace commerçant.
-      { path: '/', element: <PageListeProduits /> },
-      { path: '/produits/nouveau', element: <PageFormulaireProduit /> },
-      { path: '/produits/:id/modifier', element: <PageFormulaireProduit /> },
-      { path: '/categories', element: <PageCategories /> },
-    ],
-  },
-  { path: '*', element: <Navigate to="/" replace /> },
-])
+const router = createBrowserRouter(routes)
 
 /**
  * Un 401 sur une requête AUTRE que /api/moi (celle-là, RouteProtegee la
@@ -84,7 +60,7 @@ const queryCache = new QueryCache({
     }
 
     if (axios.isAxiosError(erreur) && erreur.response?.status === 401) {
-      declencherRedirectionConnexionUneSeuleFois(() => router.navigate('/connexion', { replace: true }))
+      declencherRedirectionConnexionUneSeuleFois(() => router.navigate('/admin/connexion', { replace: true }))
     }
   },
 })

@@ -10,6 +10,7 @@ use App\Http\Resources\MediaResource;
 use App\Models\Media;
 use App\Models\Produit;
 use App\Services\Medias\GenerateurVariantesImage;
+use App\Support\Vitrine\CacheVitrine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -84,6 +85,8 @@ class MediaProduitController extends Controller
             return $this->reponseLimiteAtteinte();
         }
 
+        CacheVitrine::invalider($produit->etablissement_id);
+
         return (new MediaResource($produit->medias()->orderByPivot('ordre')->findOrFail($media->id)))
             ->response()
             ->setStatusCode(201);
@@ -111,6 +114,8 @@ class MediaProduitController extends Controller
             $this->resynchroniserOrdre($produit);
         });
 
+        CacheVitrine::invalider($produit->etablissement_id);
+
         return response()->json(null, 204);
     }
 
@@ -122,6 +127,8 @@ class MediaProduitController extends Controller
                 'est_principal' => $index === 0,
             ]);
         }
+
+        CacheVitrine::invalider($produit->etablissement_id);
 
         return MediaResource::collection($produit->medias()->orderByPivot('ordre')->get());
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ModeStock;
 use App\Enums\StatutProduit;
+use App\Enums\TypeOffre;
 use App\Models\Concerns\AppartientAEtablissement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -29,6 +30,7 @@ class Produit extends Model
      */
     protected $attributes = [
         'statut' => 'brouillon',
+        'type_offre' => 'bien',
         'quantite_stock' => 0,
         'quantite_reservee' => 0,
         'disponible' => true,
@@ -36,6 +38,7 @@ class Produit extends Model
 
     protected $fillable = [
         'categorie_id',
+        'type_offre',
         'nom',
         'slug',
         'description',
@@ -60,6 +63,7 @@ class Produit extends Model
             'disponible' => 'boolean',
             'mode_stock' => ModeStock::class,
             'statut' => StatutProduit::class,
+            'type_offre' => TypeOffre::class,
             'publie_le' => 'datetime',
         ];
     }

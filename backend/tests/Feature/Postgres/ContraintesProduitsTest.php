@@ -119,6 +119,25 @@ class ContraintesProduitsTest extends PostgresTestCase
         $this->assertSame(0, Produit::pourTousEtablissements()->count());
     }
 
+    /**
+     * Voir Étape 6A, test n°10 : type_offre est aussi casté en enum PHP
+     * (App\Enums\TypeOffre) côté modèle, donc — même raison que mode_stock
+     * et statut ci-dessus — testé en SQL brut plutôt que via Eloquent.
+     */
+    public function test_type_offre_invalide_est_refuse(): void
+    {
+        $etablissement = Etablissement::factory()->create();
+
+        $this->assertInsertionRefuseeParContrainte(
+            fn () => DB::table('produits')->insert($this->ligneProduitValide($etablissement, [
+                'type_offre' => 'invalide',
+            ])),
+            'produits_type_offre_valide',
+        );
+
+        $this->assertSame(0, Produit::pourTousEtablissements()->count());
+    }
+
     private function ligneProduitValide(Etablissement $etablissement, array $remplacements = []): array
     {
         return array_merge([

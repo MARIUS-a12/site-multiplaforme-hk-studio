@@ -19,7 +19,7 @@ export function EtatVide({ peutCreer }: { peutCreer: boolean }) {
       </p>
       {peutCreer && (
         <Link
-          to="/produits/nouveau"
+          to="/admin/produits/nouveau"
           className="mt-2 inline-flex h-11 cursor-pointer items-center rounded bg-primaire px-4 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
         >
           Ajouter un produit

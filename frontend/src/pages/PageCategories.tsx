@@ -1,5 +1,5 @@
 /**
- * Écran Catégories (/categories) : liste avec le nombre de produits par
+ * Écran Catégories (/admin/categories) : liste avec le nombre de produits par
  * catégorie, création en ligne (un champ + un bouton, pas une page à part —
  * ça n'a pas besoin d'être plus lourd que ça), et archivage/republication.
  * Accessible depuis la liste de produits et depuis le champ Catégorie du

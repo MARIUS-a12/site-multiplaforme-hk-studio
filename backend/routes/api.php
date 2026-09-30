@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\StatistiquesController;
+use App\Http\Controllers\Api\Vitrine\VitrineCategorieController;
+use App\Http\Controllers\Api\Vitrine\VitrineEtablissementController;
+use App\Http\Controllers\Api\Vitrine\VitrineProduitController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +19,18 @@ use Illuminate\Support\Facades\Route;
 // version stricte du middleware romprait l'uniformité des 4 échecs de
 // connexion (voir Étape 1, exigence n°7).
 Route::post('/connexion', [SessionController::class, 'store'])->middleware('throttle:5,1');
+
+// Vitrine publique : ni "auth:sanctum" ni "resoudre.etablissement" strict au
+// sens d'exiger une session — un visiteur anonyme doit pouvoir tout
+// consulter. Seul "resoudre.etablissement" s'applique (isolation par
+// sous-domaine, 404 si l'établissement est inactif ou inconnu).
+Route::middleware('resoudre.etablissement')->prefix('vitrine')->group(function () {
+    Route::get('/produits', [VitrineProduitController::class, 'index']);
+    Route::get('/produits/{id}', [VitrineProduitController::class, 'show']);
+    Route::post('/produits/{id}/lien-whatsapp', [VitrineProduitController::class, 'lienWhatsapp']);
+    Route::get('/categories', [VitrineCategorieController::class, 'index']);
+    Route::get('/etablissement', [VitrineEtablissementController::class, 'show']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deconnexion', [SessionController::class, 'destroy']);

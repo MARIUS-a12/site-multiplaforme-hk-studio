@@ -1,6 +1,6 @@
 /**
- * Écran de création (/produits/nouveau) ET de modification
- * (/produits/:id/modifier) d'un produit — un seul composant pour les deux,
+ * Écran de création (/admin/produits/nouveau) ET de modification
+ * (/admin/produits/:id/modifier) d'un produit — un seul composant pour les deux,
  * le paramètre d'URL décide du mode. Le bloc stock change de forme selon le
  * type de l'établissement (voir BlocStock) ; le mode de stock lui-même
  * n'est jamais un choix de ce formulaire.
@@ -67,7 +67,7 @@ export function PageFormulaireProduit() {
   if (enAttente) {
     return (
       <div className="mx-auto max-w-2xl">
-        <BoutonRetour vers="/" />
+        <BoutonRetour vers="/admin/produits" />
         <EtatChargement />
       </div>
     )
@@ -76,7 +76,7 @@ export function PageFormulaireProduit() {
   if (enErreur) {
     return (
       <div className="mx-auto max-w-2xl">
-        <BoutonRetour vers="/" />
+        <BoutonRetour vers="/admin/produits" />
         <EtatErreur
           erreur={produitExistant.error ?? categoriesQuery.error}
           onReessayer={() => {
@@ -195,7 +195,7 @@ function FormulaireProduit({
       setEstModifie(false)
       invaliderListes()
       permettreProchaineNavigation()
-      navigate('/', {
+      navigate('/admin/produits', {
         state: {
           messageSucces: estModification
             ? `« ${produit.nom} » a été modifié.`
@@ -212,7 +212,7 @@ function FormulaireProduit({
       setEstModifie(false)
       invaliderListes()
       permettreProchaineNavigation()
-      navigate('/', { state: { messageSucces: `« ${nom} » a été archivé.` } })
+      navigate('/admin/produits', { state: { messageSucces: `« ${nom} » a été archivé.` } })
     },
   })
 
@@ -231,7 +231,7 @@ function FormulaireProduit({
   return (
     <div className="mx-auto max-w-2xl pb-4">
       <div className="mb-4 flex items-center gap-2">
-        <BoutonRetour vers="/" />
+        <BoutonRetour vers="/admin/produits" />
         <h1 className="text-titre-page font-semibold text-texte">
           {estModification ? 'Modifier le produit' : 'Nouveau produit'}
         </h1>
@@ -270,7 +270,7 @@ function FormulaireProduit({
             }}
             erreur={erreurs.categorie_id}
           />
-          <Link to="/categories" className="mt-1 inline-block text-petit text-primaire underline">
+          <Link to="/admin/categories" className="mt-1 inline-block text-petit text-primaire underline">
             Gérer les catégories
           </Link>
         </div>
