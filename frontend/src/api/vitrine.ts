@@ -129,3 +129,102 @@ export async function genererLienWhatsapp(produitId: number, varianteId: number 
 
   return data.url
 }
+
+// --- Étape 6B — panier et commande --------------------------------------
+
+export type StatutLignePanier = 'disponible' | 'prix_modifie' | 'epuise' | 'retire'
+
+export type LigneVerifiee = {
+  produit_id: number
+  variante_id: number | null
+  quantite: number
+  nom: string | null
+  prix_actuel: number | null
+  disponible: boolean
+  statut: StatutLignePanier
+}
+
+export type ReponseVerificationPanier = {
+  lignes: LigneVerifiee[]
+  sous_total: number
+}
+
+/**
+ * prix_vu : le dernier prix affiché à l'utilisateur pour cette ligne (voir
+ * lib/panier.ts), envoyé pour que le serveur puisse signaler un changement —
+ * jamais pour calculer quoi que ce soit, le total renvoyé vient toujours du
+ * prix actuel relu en base.
+ */
+export async function verifierPanier(
+  lignes: { produitId: number; varianteId: number | null; quantite: number; prixVu: number | null }[],
+): Promise<ReponseVerificationPanier> {
+  const { data } = await client.post<ReponseVerificationPanier>('/api/vitrine/panier/verifier', {
+    lignes: lignes.map((ligne) => ({
+      produit_id: ligne.produitId,
+      variante_id: ligne.varianteId,
+      quantite: ligne.quantite,
+      prix_vu: ligne.prixVu,
+    })),
+  })
+
+  return data
+}
+
+export type ZoneLivraisonVitrine = {
+  id: number
+  nom: string
+  frais: number
+  delai_estime: string | null
+}
+
+export async function recupererZonesLivraison(): Promise<ZoneLivraisonVitrine[]> {
+  const { data } = await client.get<{ data: ZoneLivraisonVitrine[] }>('/api/vitrine/zones-livraison')
+
+  return data.data
+}
+
+export type NouvelleCommandePayload = {
+  lignes: { produit_id: number; variante_id: number | null; quantite: number }[]
+  client: { nom: string; telephone: string; email: string | null }
+  zone_livraison_id: number | null
+  note: string | null
+  cle_idempotence: string
+}
+
+export type CommandeCreee = {
+  numero: string
+  jeton: string
+}
+
+export async function creerCommandeVitrine(payload: NouvelleCommandePayload): Promise<CommandeCreee> {
+  const { data } = await client.post<CommandeCreee>('/api/vitrine/commandes', payload)
+
+  return data
+}
+
+export type LigneCommandeVitrine = {
+  nom: string
+  quantite: number
+  prix_unitaire: number
+  total: number
+}
+
+export type CommandeVitrine = {
+  numero: string
+  statut: string
+  sous_total: number
+  frais_livraison: number
+  total: number
+  note: string | null
+  cree_le: string
+  zone_livraison: { nom: string } | null
+  lignes: LigneCommandeVitrine[]
+}
+
+export async function recupererCommandeVitrine(numero: string, jeton: string): Promise<CommandeVitrine> {
+  const { data } = await client.get<{ data: CommandeVitrine }>(`/api/vitrine/commandes/${numero}`, {
+    params: { jeton },
+  })
+
+  return data.data
+}

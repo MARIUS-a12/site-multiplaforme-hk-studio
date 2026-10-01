@@ -159,6 +159,7 @@ export function PageFicheProduitVitrine() {
 
           <BoutonsAchatVitrine
             produitId={produit.id}
+            prix={prixAffiche}
             disponible={produit.disponible}
             variantes={produit.variantes}
             varianteChoisie={varianteChoisie}

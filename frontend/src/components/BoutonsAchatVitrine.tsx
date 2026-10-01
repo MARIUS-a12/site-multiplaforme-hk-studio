@@ -1,34 +1,41 @@
 /**
  * Les trois actions d'achat de la fiche produit, dans l'ordre imposé :
- * payer maintenant, commander sur WhatsApp, ajouter au panier. Paiement et
- * panier n'existent pas encore — ils ouvrent juste un panneau qui le dit.
- * WhatsApp, lui, fonctionne réellement : le lien (avec sa référence opaque)
- * est composé côté serveur, voir api/vitrine.ts.
+ * payer maintenant, commander sur WhatsApp, ajouter au panier. Paiement
+ * n'existe pas encore — il ouvre juste un panneau qui le dit (voir Étape 6C).
+ * WhatsApp et le panier, eux, fonctionnent réellement : le lien WhatsApp
+ * (avec sa référence opaque) est composé côté serveur (voir api/vitrine.ts),
+ * le panier vit dans localStorage (voir lib/panier.ts) et confirme l'ajout
+ * sans quitter la page — jamais de navigation, jamais de rechargement.
  *
  * Si le produit a des variantes, les trois boutons restent désactivés tant
  * qu'aucune n'est choisie — impossible de commander "le produit" sans
  * préciser laquelle.
  */
-import { useState } from 'react'
-import { CreditCard, MessageCircle, ShoppingCart } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, CreditCard, MessageCircle, ShoppingCart } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import type { VarianteVitrine } from '../api/vitrine'
 import { genererLienWhatsapp } from '../api/vitrine'
+import { usePanier } from '../hooks/usePanier'
 import { EtatBouton } from './EtatBouton'
 import { PanneauMessage } from './PanneauMessage'
 
 export function BoutonsAchatVitrine({
   produitId,
+  prix,
   disponible,
   variantes,
   varianteChoisie,
 }: {
   produitId: number
+  prix: number
   disponible: boolean
   variantes: VarianteVitrine[]
   varianteChoisie: VarianteVitrine | null
 }) {
-  const [panneau, setPanneau] = useState<'paiement' | 'panier' | null>(null)
+  const { ajouter } = usePanier()
+  const [panneau, setPanneau] = useState<'paiement' | null>(null)
+  const [ajoute, setAjoute] = useState(false)
 
   const aBesoinDuneVariante = variantes.length > 0
   const varianteIndisponible = varianteChoisie !== null && !varianteChoisie.disponible
@@ -51,6 +58,23 @@ export function BoutonsAchatVitrine({
       window.open(url, '_blank', 'noopener,noreferrer')
     },
   })
+
+  // Confirmation visuelle temporaire sur le bouton lui-même — jamais une
+  // navigation, jamais un rechargement (voir docblock). 2s : le temps de la
+  // remarquer sans ralentir qui enchaîne plusieurs ajouts.
+  useEffect(() => {
+    if (!ajoute) {
+      return
+    }
+
+    const minuteur = setTimeout(() => setAjoute(false), 2000)
+    return () => clearTimeout(minuteur)
+  }, [ajoute])
+
+  function ajouterAuPanier() {
+    ajouter(produitId, varianteChoisie?.id ?? null, 1, varianteChoisie?.prix ?? prix)
+    setAjoute(true)
+  }
 
   return (
     <div>
@@ -80,11 +104,20 @@ export function BoutonsAchatVitrine({
         <button
           type="button"
           disabled={!peutAcheter}
-          onClick={() => setPanneau('panier')}
+          onClick={ajouterAuPanier}
           className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte-secondaire transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
-          <ShoppingCart aria-hidden="true" size={20} strokeWidth={1.5} />
-          Ajouter au panier
+          {ajoute ? (
+            <>
+              <Check aria-hidden="true" size={20} strokeWidth={1.5} />
+              Ajouté au panier
+            </>
+          ) : (
+            <>
+              <ShoppingCart aria-hidden="true" size={20} strokeWidth={1.5} />
+              Ajouter au panier
+            </>
+          )}
         </button>
       </div>
 
@@ -101,15 +134,7 @@ export function BoutonsAchatVitrine({
       {panneau === 'paiement' && (
         <PanneauMessage
           titre="Paiement bientôt disponible"
-          message="Le paiement en ligne arrive prochainement. En attendant, commandez sur WhatsApp."
-          onFermer={() => setPanneau(null)}
-        />
-      )}
-
-      {panneau === 'panier' && (
-        <PanneauMessage
-          titre="Panier bientôt disponible"
-          message="Le panier arrive prochainement. En attendant, commandez sur WhatsApp."
+          message="Le paiement en ligne arrive prochainement. En attendant, commandez sur WhatsApp ou ajoutez au panier."
           onFermer={() => setPanneau(null)}
         />
       )}

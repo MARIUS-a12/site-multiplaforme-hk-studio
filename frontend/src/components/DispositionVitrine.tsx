@@ -16,6 +16,7 @@ import type { CSSProperties } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { useEtablissementVitrine } from '../hooks/useEtablissementVitrine'
 import { couleurTexteSurAccent } from '../lib/couleurAccent'
+import { LienPanier } from './LienPanier'
 import { TransitionPage } from './TransitionPage'
 
 export function DispositionVitrine() {
@@ -31,11 +32,11 @@ export function DispositionVitrine() {
   return (
     <div className="vitrine min-h-screen bg-surface" style={styleAccent}>
       <header className="sticky top-0 z-10 border-b border-bordure bg-surface px-4">
-        <div className="mx-auto flex h-14 max-w-6xl items-center">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3">
           {isPending ? (
             <div className="h-5 w-40 animate-pulse rounded bg-surface-alt" />
           ) : (
-            <Link to="/" className="flex items-center gap-2 truncate">
+            <Link to="/" className="flex min-w-0 items-center gap-2 truncate">
               {etablissement?.logo && (
                 <img
                   src={etablissement.logo}
@@ -48,6 +49,7 @@ export function DispositionVitrine() {
               </span>
             </Link>
           )}
+          <LienPanier />
         </div>
       </header>
 

@@ -9,8 +9,11 @@ use App\Http\Controllers\Api\ProduitController;
 use App\Http\Controllers\Api\SessionController;
 use App\Http\Controllers\Api\StatistiquesController;
 use App\Http\Controllers\Api\Vitrine\VitrineCategorieController;
+use App\Http\Controllers\Api\Vitrine\VitrineCommandeController;
 use App\Http\Controllers\Api\Vitrine\VitrineEtablissementController;
+use App\Http\Controllers\Api\Vitrine\VitrinePanierController;
 use App\Http\Controllers\Api\Vitrine\VitrineProduitController;
+use App\Http\Controllers\Api\Vitrine\VitrineZoneLivraisonController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +33,15 @@ Route::middleware('resoudre.etablissement')->prefix('vitrine')->group(function (
     Route::post('/produits/{id}/lien-whatsapp', [VitrineProduitController::class, 'lienWhatsapp']);
     Route::get('/categories', [VitrineCategorieController::class, 'index']);
     Route::get('/etablissement', [VitrineEtablissementController::class, 'show']);
+
+    // Étape 6B — panier et commande : le navigateur n'envoie que des
+    // identifiants et des quantités, jamais un prix (voir
+    // CreerCommandeVitrineRequest). "commandes/{numero}" avant tout autre
+    // verbe sur "commandes" n'a pas d'ambiguïté possible ici (un seul GET).
+    Route::post('/panier/verifier', [VitrinePanierController::class, 'verifier']);
+    Route::get('/zones-livraison', [VitrineZoneLivraisonController::class, 'index']);
+    Route::post('/commandes', [VitrineCommandeController::class, 'store']);
+    Route::get('/commandes/{numero}', [VitrineCommandeController::class, 'show']);
 });
 
 Route::middleware('auth:sanctum')->group(function () {

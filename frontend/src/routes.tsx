@@ -25,6 +25,8 @@ import { DispositionVitrine } from './components/DispositionVitrine'
 import { RouteProtegee } from './components/RouteProtegee'
 import { PageAccueilVitrine } from './pages/PageAccueilVitrine'
 import { PageCategories } from './pages/PageCategories'
+import { PageCommander } from './pages/PageCommander'
+import { PageConfirmationCommande } from './pages/PageConfirmationCommande'
 import { PageConnexionUtilisateur } from './pages/PageConnexionUtilisateur'
 import { PageFicheEtablissement } from './pages/PageFicheEtablissement'
 import { PageFicheProduitVitrine } from './pages/PageFicheProduitVitrine'
@@ -34,6 +36,7 @@ import { PageIntrouvableAdmin } from './pages/PageIntrouvableAdmin'
 import { PageIntrouvableVitrine } from './pages/PageIntrouvableVitrine'
 import { PageListeEtablissements } from './pages/PageListeEtablissements'
 import { PageListeProduits } from './pages/PageListeProduits'
+import { PagePanier } from './pages/PagePanier'
 
 export const routes = [
   // Vitrine publique : "/" et "/produit/:id", plus sa PROPRE 404 en repli
@@ -44,6 +47,9 @@ export const routes = [
     children: [
       { path: '/', element: <PageAccueilVitrine /> },
       { path: '/produit/:id', element: <PageFicheProduitVitrine /> },
+      { path: '/panier', element: <PagePanier /> },
+      { path: '/commander', element: <PageCommander /> },
+      { path: '/commande/:numero', element: <PageConfirmationCommande /> },
       { path: '*', element: <PageIntrouvableVitrine /> },
     ],
   },
