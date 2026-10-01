@@ -25,6 +25,7 @@ class CreerEtablissement
         string $sousDomaine,
         ?string $email,
         ?string $telephone,
+        ?string $couleurAccent,
         string $nomAdministrateur,
         string $emailAdministrateur,
     ): ResultatCreationEtablissement {
@@ -34,6 +35,7 @@ class CreerEtablissement
             $sousDomaine,
             $email,
             $telephone,
+            $couleurAccent,
             $nomAdministrateur,
             $emailAdministrateur,
         ) {
@@ -43,6 +45,7 @@ class CreerEtablissement
                 'type' => $type,
                 'email' => $email,
                 'telephone' => $telephone,
+                'couleur_accent' => $couleurAccent,
             ]);
 
             // Via la relation, pas Domaine::create() : etablissement_id

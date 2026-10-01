@@ -1,9 +1,12 @@
 import type { VarianteMedia } from '../api/medias'
 import { classeFondAvatar, initiale } from '../lib/couleurAvatar'
 
+// text-corps / text-titre-section : toujours l'une des quatre tailles de
+// l'échelle typographique du projet (voir index.css), jamais une taille
+// Tailwind par défaut (text-base, text-lg...) qui n'en fait pas partie.
 const TAILLES = {
-  40: 'h-10 w-10 text-base',
-  48: 'h-12 w-12 text-lg',
+  40: 'h-10 w-10 text-corps',
+  48: 'h-12 w-12 text-titre-section',
 } as const
 
 /**

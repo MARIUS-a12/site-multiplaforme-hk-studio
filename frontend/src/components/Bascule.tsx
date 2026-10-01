@@ -22,14 +22,14 @@ export function Bascule({
       role="switch"
       aria-checked={actif}
       onClick={() => onChange(!actif)}
-      className="flex h-11 cursor-pointer items-center gap-3 rounded border border-bordure px-3 transition-colors duration-150 hover:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+      className="flex h-11 cursor-pointer items-center gap-3 rounded border border-bordure px-3 transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
     >
       <span
         aria-hidden="true"
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150 ${actif ? 'bg-succes' : 'bg-bordure'}`}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${actif ? 'bg-succes' : 'bg-bordure'}`}
       >
         <span
-          className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-surface transition-transform duration-150 ${actif ? 'translate-x-5' : 'translate-x-0'}`}
+          className={`absolute left-1 top-1 h-4 w-4 rounded-full bg-surface transition-transform ${actif ? 'translate-x-5' : 'translate-x-0'}`}
         />
       </span>
       <span className="text-corps font-medium text-texte">{actif ? libelleActif : libelleInactif}</span>

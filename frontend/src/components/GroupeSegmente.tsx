@@ -23,7 +23,7 @@ export function GroupeSegmente<T extends string>({
           type="button"
           onClick={() => onChange(option.valeur)}
           aria-pressed={valeur === option.valeur}
-          className={`h-11 flex-1 cursor-pointer px-3 text-corps font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 ${
+          className={`h-11 flex-1 cursor-pointer px-3 text-corps font-medium transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 ${
             index > 0 ? 'border-l border-bordure' : ''
           } ${
             valeur === option.valeur

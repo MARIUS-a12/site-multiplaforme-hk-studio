@@ -164,7 +164,7 @@ export function ZoneEnvoiPhotos({ produitId, medias }: { produitId: number; medi
         Photos <span className="text-texte-secondaire">({medias.length}/{MAX_PHOTOS})</span>
       </span>
 
-      {erreurGenerale && <p className="mb-2 text-petit text-danger">{erreurGenerale}</p>}
+      {erreurGenerale && <p className="animate-entree-champ mb-2 text-petit text-danger">{erreurGenerale}</p>}
 
       {(medias.length > 0 || envoisEnCours.length > 0) && (
         <div className="mb-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -193,7 +193,7 @@ export function ZoneEnvoiPhotos({ produitId, medias }: { produitId: number; medi
                 />
               </picture>
               {media.est_principal && (
-                <span className="absolute left-1 top-1 rounded bg-primaire px-1.5 py-0.5 text-[11px] font-medium text-surface">
+                <span className="absolute left-1 top-1 rounded bg-primaire px-1.5 py-0.5 text-petit font-medium text-surface">
                   Principale
                 </span>
               )}
@@ -202,7 +202,7 @@ export function ZoneEnvoiPhotos({ produitId, medias }: { produitId: number; medi
                 title="Supprimer cette photo"
                 aria-label="Supprimer cette photo"
                 onClick={() => supprimer(media)}
-                className="absolute right-1 top-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-surface/90 text-danger transition-colors duration-150 hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+                className="absolute right-1 top-1 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-surface/90 text-danger transition-[background-color,transform] hover:bg-surface active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
               >
                 <Trash2 aria-hidden="true" size={18} strokeWidth={1.5} />
               </button>
@@ -216,7 +216,7 @@ export function ZoneEnvoiPhotos({ produitId, medias }: { produitId: number; medi
                 <button
                   type="button"
                   onClick={() => retirerEnvoiEchoue(envoi.id)}
-                  className="absolute inset-0 flex items-center justify-center bg-surface/90 p-1 text-center text-[11px] text-danger"
+                  className="absolute inset-0 flex items-center justify-center bg-surface/90 p-1 text-center text-petit text-danger"
                 >
                   {envoi.erreur}
                   <br />
@@ -226,9 +226,14 @@ export function ZoneEnvoiPhotos({ produitId, medias }: { produitId: number; medi
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-surface/70">
                   <Loader2 aria-hidden="true" size={20} strokeWidth={1.5} className="animate-spin text-primaire" />
                   <div className="h-1 w-4/5 overflow-hidden rounded bg-bordure">
+                    {/* scaleX plutôt que width : une largeur qui change
+                        recalcule la mise en page à chaque pourcentage reçu,
+                        un transform non. origin-left pour que la barre
+                        grandisse vers la droite comme une largeur l'aurait
+                        fait. */}
                     <div
-                      className="h-full bg-primaire transition-[width] duration-150"
-                      style={{ width: `${envoi.progression}%` }}
+                      className="h-full w-full origin-left rounded bg-primaire transition-transform"
+                      style={{ transform: `scaleX(${envoi.progression / 100})` }}
                     />
                   </div>
                 </div>
@@ -255,7 +260,7 @@ export function ZoneEnvoiPhotos({ produitId, medias }: { produitId: number; medi
           }}
           onDragLeave={() => setSurvole(false)}
           onDrop={gererDepot}
-          className={`flex h-11 cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed px-4 text-corps text-texte-secondaire transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 ${
+          className={`flex h-11 cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed px-4 text-corps text-texte-secondaire transition-[background-color,border-color,color,transform] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 ${
             survole ? 'border-primaire bg-primaire/5 text-primaire' : 'border-bordure hover:border-primaire'
           }`}
         >

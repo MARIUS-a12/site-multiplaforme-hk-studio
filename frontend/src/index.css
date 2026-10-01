@@ -6,18 +6,48 @@
  * bg-succes/10, etc.) — jamais une couleur écrite en dur dans un composant.
  */
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  /*
+   * Aucune police téléchargée, nulle part sur la plateforme (voir le plan de
+   * design de l'Étape 6A bis) : la police du système (Roboto sur l'Android
+   * du commerçant comme de l'acheteur, San Francisco sur iOS) s'affiche
+   * instantanément, y compris hors-ligne ou sur une 3G qui coupe — ce
+   * qu'aucune police embarquée, même self-hébergée, ne peut égaler.
+   */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
   --color-surface: #ffffff;
-  --color-surface-alt: #f0f3f1;
-  --color-texte: #14181b;
-  --color-texte-secondaire: #4a5568;
-  --color-bordure: #8993a0;
+  --color-surface-alt: #eef0f2;
+  --color-texte: #000000;
+  --color-texte-secondaire: #595f66;
+  --color-bordure: #c9cdd2;
   --color-primaire: #146c43;
   --color-primaire-fonce: #0f5233;
   --color-danger: #b91c1c;
   --color-succes: #15803d;
   --color-alerte: #b45309;
+
+  /*
+   * Couleur d'accent de la vitrine : vaut --color-primaire par défaut (pas
+   * d'établissement personnalisé), mais DispositionVitrine la redéfinit en
+   * style inline avec la couleur propre à l'établissement affiché — tout ce
+   * qui utilise bg-accent/text-accent-texte en hérite automatiquement, sans
+   * jamais connaître la couleur réelle. accent-texte est toujours #000 ou
+   * #fff : pour une couleur C quelconque, le contraste de C contre le noir
+   * multiplié par son contraste contre le blanc vaut toujours 21 (propriété
+   * de la formule WCAG) — l'un des deux dépasse donc nécessairement 4,5:1,
+   * quelle que soit C. Voir lib/couleurAccent.ts pour le calcul.
+   */
+  --color-accent: var(--color-primaire);
+  --color-accent-texte: #ffffff;
+
+  /*
+   * Seule ombre du projet : réservée à un panneau réellement flottant
+   * au-dessus d'un fond assombri (voir PanneauMessage). Une carte ou un
+   * bouton ne la portent jamais — l'ombre signifie "au-dessus de tout le
+   * reste", pas "ceci est cliquable".
+   */
+  --shadow-flottant: 0 8px 24px -4px rgb(0 0 0 / 0.18);
 
   /*
    * Palette des vignettes-initiales (produits sans photo, établissement) :
@@ -44,10 +74,134 @@
   --text-corps--line-height: 1.5;
   --text-petit: 0.8125rem; /* 13px */
   --text-petit--line-height: 1.4;
+
+  /*
+   * Mouvement — durées et courbes centralisées (Étape 6A bis). Deux
+   * valeurs seulement : "rapide" pour un retour tactile (survol, pression),
+   * "normale" pour l'apparition d'un élément (carte, panneau, bandeau).
+   * Rien au-dessus de 300ms. Génèrent duration-rapide / duration-normale et
+   * ease-apparition / ease-disparition — jamais de durée écrite en dur
+   * dans un composant, toujours l'une de ces classes.
+   */
+  --duration-rapide: 150ms;
+  --duration-normale: 200ms;
+  --ease-apparition: ease-out;
+  --ease-disparition: ease-in;
+
+  /* Rebranche les valeurs par défaut de Tailwind sur nos jetons : elles
+   * servent à TOUTE classe "transition-colors", "transition-transform", etc.
+   * qui ne précise pas elle-même de duration ou de courbe. "transition-colors"
+   * tout seul, dans n'importe quel composant, vaut donc déjà 150ms ease-out
+   * sans rien ajouter — c'est ce qui permet de ne jamais écrire une durée
+   * en dur. */
+  --default-transition-duration: var(--duration-rapide);
+  --default-transition-timing-function: var(--ease-apparition);
+
+  /* Squelettes de chargement : pulsation douce, plus lente que le défaut
+   * Tailwind (2s) — voir @keyframes pulse ci-dessous pour l'amplitude. */
+  --animate-pulse: pulse 1.5s ease-in-out infinite;
+
+  /* Entrée d'une carte de liste (voir lib/animation.ts pour le décalage
+   * plafonné à 8 cartes) et d'un bandeau de confirmation/erreur. */
+  --animate-entree-carte: entree-carte var(--duration-normale) var(--ease-apparition) both;
+  --animate-entree-haut: entree-haut var(--duration-normale) var(--ease-apparition) both;
+  --animate-entree-page: entree-page var(--duration-rapide) var(--ease-apparition) both;
+
+  /* Message d'erreur sous un champ de formulaire (voir ChampTexte et les
+   * autres champs) : même fondu que l'entrée de page ci-dessus (même
+   * @keyframes, juste un nom qui dit où il sert), pour qu'il n'apparaisse
+   * jamais brutalement sous le champ. */
+  --animate-entree-champ: entree-page var(--duration-rapide) var(--ease-apparition) both;
+
+  /* Panneaux/boîtes de dialogue (voir PanneauMessage) : fond assombri en
+   * fondu, panneau qui monte de 16px en s'opacifiant. La fermeture, elle,
+   * bascule des classes utilitaires ordinaires sous une transition (pas une
+   * animation) pour pouvoir la jouer AVANT le démontage — voir le
+   * composant. */
+  --animate-entree-fondu: entree-fondu var(--duration-normale) var(--ease-apparition) both;
+  --animate-entree-panneau: entree-panneau var(--duration-normale) var(--ease-apparition) both;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes entree-carte {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes entree-haut {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes entree-page {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes entree-fondu {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes entree-panneau {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
 }
 
 body {
   background-color: var(--color-surface-alt);
   color: var(--color-texte);
   font-family: var(--font-sans);
+}
+
+/*
+ * La vitrine respire davantage que le back-office : fond de réserve et
+ * bordures plus claires. Porté par DispositionVitrine, qui y ajoute aussi
+ * --color-accent/--color-accent-texte propres à l'établissement affiché —
+ * tout ce qui est sous ce conteneur en hérite via la cascade, sans qu'aucun
+ * composant n'ait à savoir quel établissement il affiche.
+ */
+.vitrine {
+  --color-surface-alt: #f7f7f8;
+  --color-bordure: #e1e3e6;
+}
+
+/*
+ * Accessibilité, pas une option : un visiteur qui a désactivé les
+ * animations dans son système ne doit plus en voir une seule, nulle part.
+ * Couvre à la fois nos jetons centralisés (transitions Tailwind qui les
+ * utilisent) et les animations "infinies" (pulsation des squelettes,
+ * rotation des indicateurs de chargement) qui n'ont pas de "durée" au sens
+ * d'une transition mais doivent quand même s'arrêter.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-rapide: 0ms;
+    --duration-normale: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

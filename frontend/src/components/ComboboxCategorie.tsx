@@ -11,6 +11,7 @@ import type { KeyboardEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Categorie } from '../api/categories'
 import { creerCategorie } from '../api/categories'
+import { EtatBouton } from './EtatBouton'
 
 export type CategorieChoisie = { id: number; nom: string }
 
@@ -115,7 +116,7 @@ export function ComboboxCategorie({
             onChange(null)
           }
         }}
-        className={`h-11 w-full rounded border bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
+        className={`h-11 w-full rounded border bg-surface px-3 text-corps text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
           erreur ? 'border-danger' : 'border-bordure focus:border-primaire'
         }`}
       />
@@ -127,7 +128,7 @@ export function ComboboxCategorie({
               <button
                 type="button"
                 onClick={() => choisir(categorie)}
-                className="block w-full cursor-pointer px-3 py-2 text-left text-corps text-texte transition-colors duration-150 hover:bg-surface-alt"
+                className="block w-full cursor-pointer px-3 py-2 text-left text-corps text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97]"
               >
                 {categorie.nom}
               </button>
@@ -140,16 +141,18 @@ export function ComboboxCategorie({
                 type="button"
                 disabled={creation.isPending}
                 onClick={creer}
-                className="block w-full cursor-pointer px-3 py-2 text-left text-corps text-primaire transition-colors duration-150 hover:bg-surface-alt disabled:opacity-60"
+                className="block w-full cursor-pointer px-3 py-2 text-left text-corps text-primaire transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100"
               >
-                {creation.isPending ? 'Création…' : `Créer la catégorie « ${saisie.trim()} »`}
+                <EtatBouton chargement={creation.isPending}>
+                  {`Créer la catégorie « ${saisie.trim()} »`}
+                </EtatBouton>
               </button>
             </li>
           )}
         </ul>
       )}
 
-      {erreur && <p className="mt-1 text-petit text-danger">{erreur}</p>}
+      {erreur && <p className="animate-entree-champ mt-1 text-petit text-danger">{erreur}</p>}
     </div>
   )
 }

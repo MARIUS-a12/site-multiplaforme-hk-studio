@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { archiverProduit, republierProduit } from '../api/produits'
 import { BadgeStatut } from '../components/BadgeStatut'
+import { CLASSE_BORDURE_STATUT } from '../lib/statutProduit'
 import { BandeauSucces } from '../components/BandeauSucces'
 import { BandeStatistiques } from '../components/BandeStatistiques'
 import { BarreFiltres } from '../components/BarreFiltres'
@@ -120,7 +121,7 @@ export function PageListeProduits() {
         {peutGererCatalogue && (
           <Link
             to="/admin/produits/nouveau"
-            className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+            className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
           >
             <Plus aria-hidden="true" size={20} strokeWidth={1.5} />
             <span className="hidden sm:inline">Ajouter un produit</span>
@@ -143,7 +144,7 @@ export function PageListeProduits() {
             setPage(1)
           }}
         />
-        <Link to="/admin/categories" className="text-petit text-primaire underline">
+        <Link to="/admin/categories" className="inline-flex h-11 items-center text-petit text-primaire underline">
           Gérer les catégories
         </Link>
       </div>
@@ -165,7 +166,10 @@ export function PageListeProduits() {
               const estArchive = produit.statut === 'archive'
 
               return (
-                <li key={produit.id} className="border border-bordure bg-surface p-4">
+                <li
+                  key={produit.id}
+                  className={`border border-bordure border-l-[3px] bg-surface p-4 ${CLASSE_BORDURE_STATUT[produit.statut]}`}
+                >
                   <div className="flex items-start gap-3">
                     <CarreInitiale nom={produit.nom} taille={48} photo={produit.medias[0]?.vignette} />
                     <div className="min-w-0 flex-1">
@@ -177,9 +181,9 @@ export function PageListeProduits() {
                       </span>
                       <div className="mt-2 flex items-center justify-between gap-3">
                         <PastilleStock produit={produit} />
-                        <span className="flex items-center gap-1.5 text-petit text-texte-secondaire">
+                        <span className="flex items-center gap-2.5 text-petit text-texte-secondaire">
                           <BadgeStatut statut={produit.statut} />
-                          {categorie && <span>· {categorie}</span>}
+                          {categorie && <span>{categorie}</span>}
                         </span>
                       </div>
                     </div>
@@ -189,7 +193,7 @@ export function PageListeProduits() {
                     <div className="mt-3 flex gap-2 border-t border-bordure pt-3">
                       <Link
                         to={`/admin/produits/${produit.id}/modifier`}
-                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte transition-colors duration-150 hover:bg-surface-alt active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
                       >
                         <Pencil aria-hidden="true" size={20} strokeWidth={1.5} />
                         Modifier
@@ -199,7 +203,7 @@ export function PageListeProduits() {
                           type="button"
                           onClick={() => republier(produit)}
                           disabled={republication.isPending}
-                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-primaire text-corps font-medium text-primaire transition-colors duration-150 hover:bg-primaire/10 active:bg-primaire/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-primaire text-corps font-medium text-primaire transition-[background-color,transform] hover:bg-primaire/10 active:scale-[0.97] active:bg-primaire/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                         >
                           <ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />
                           Republier
@@ -209,7 +213,7 @@ export function PageListeProduits() {
                           type="button"
                           onClick={() => demanderArchivage(produit)}
                           disabled={archivage.isPending}
-                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-danger text-corps font-medium text-danger transition-colors duration-150 hover:bg-danger/10 active:bg-danger/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-danger text-corps font-medium text-danger transition-[background-color,transform] hover:bg-danger/10 active:scale-[0.97] active:bg-danger/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                         >
                           <Archive aria-hidden="true" size={20} strokeWidth={1.5} />
                           Archiver
@@ -252,8 +256,10 @@ export function PageListeProduits() {
                 const estArchive = produit.statut === 'archive'
 
                 return (
-                  <tr key={produit.id} className="transition-colors duration-150 hover:bg-surface-alt">
-                    <td className="border-b border-bordure px-4 py-3">
+                  <tr key={produit.id} className="transition-colors hover:bg-surface-alt">
+                    <td
+                      className={`border-b border-bordure border-l-[3px] px-4 py-3 ${CLASSE_BORDURE_STATUT[produit.statut]}`}
+                    >
                       <div className="flex items-center gap-3">
                         <CarreInitiale nom={produit.nom} taille={40} photo={produit.medias[0]?.vignette} />
                         <span className="text-corps font-semibold text-texte">{produit.nom}</span>
@@ -266,9 +272,9 @@ export function PageListeProduits() {
                       <PastilleStock produit={produit} />
                     </td>
                     <td className="border-b border-bordure px-4 py-3">
-                      <div className="flex items-center gap-1.5 text-petit text-texte-secondaire">
+                      <div className="flex items-center gap-2.5 text-petit text-texte-secondaire">
                         <BadgeStatut statut={produit.statut} />
-                        {categorie && <span>· {categorie}</span>}
+                        {categorie && <span>{categorie}</span>}
                       </div>
                     </td>
                     <td className="border-b border-bordure px-4 py-3 tabular-nums text-petit text-texte-secondaire">
@@ -281,7 +287,7 @@ export function PageListeProduits() {
                             to={`/admin/produits/${produit.id}/modifier`}
                             title="Modifier"
                             aria-label={`Modifier ${produit.nom}`}
-                            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-texte focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+                            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,color,transform] hover:bg-surface-alt hover:text-texte active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
                           >
                             <Pencil aria-hidden="true" size={20} strokeWidth={1.5} />
                           </Link>
@@ -292,7 +298,7 @@ export function PageListeProduits() {
                               aria-label={`Republier ${produit.nom}`}
                               onClick={() => republier(produit)}
                               disabled={republication.isPending}
-                              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-primaire focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,color,transform] hover:bg-surface-alt hover:text-primaire active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                             >
                               <ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />
                             </button>
@@ -303,7 +309,7 @@ export function PageListeProduits() {
                               aria-label={`Archiver ${produit.nom}`}
                               onClick={() => demanderArchivage(produit)}
                               disabled={archivage.isPending}
-                              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,color,transform] hover:bg-surface-alt hover:text-danger active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                             >
                               <Archive aria-hidden="true" size={20} strokeWidth={1.5} />
                             </button>
@@ -326,7 +332,7 @@ export function PageListeProduits() {
                 type="button"
                 disabled={page <= 1 || isFetching}
                 onClick={() => setPage((p) => p - 1)}
-                className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-colors duration-150 hover:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40"
+                className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
               >
                 Précédent
               </button>
@@ -334,7 +340,7 @@ export function PageListeProduits() {
                 type="button"
                 disabled={page >= data.meta.last_page || isFetching}
                 onClick={() => setPage((p) => p + 1)}
-                className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-colors duration-150 hover:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40"
+                className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
               >
                 Suivant
               </button>
@@ -364,7 +370,7 @@ function EnteteTriable({
       <button
         type="button"
         onClick={onClick}
-        className="flex cursor-pointer items-center gap-1 text-texte-secondaire focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+        className="flex cursor-pointer items-center gap-1 text-texte-secondaire transition-transform active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
       >
         {libelle}
         {actif && <Icone aria-hidden="true" size={16} strokeWidth={1.5} />}

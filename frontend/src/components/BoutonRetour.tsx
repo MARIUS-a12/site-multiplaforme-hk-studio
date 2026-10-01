@@ -17,7 +17,7 @@ export function BoutonRetour({ vers }: { vers?: string }) {
       type="button"
       onClick={() => (vers ? navigate(vers) : navigate(-1))}
       aria-label="Retour"
-      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded text-texte transition-colors duration-150 hover:bg-surface-alt active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
     >
       <ArrowLeft aria-hidden="true" size={20} strokeWidth={1.5} />
     </button>

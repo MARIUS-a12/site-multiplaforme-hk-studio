@@ -14,6 +14,7 @@ import type { VarianteVitrine } from '../api/vitrine'
 import { BoutonRetour } from '../components/BoutonRetour'
 import { BoutonsAchatVitrine } from '../components/BoutonsAchatVitrine'
 import { EtatErreur } from '../components/EtatErreur'
+import { ImageAvecFondu } from '../components/ImageAvecFondu'
 import { useProduitVitrine } from '../hooks/useProduitVitrine'
 import { formaterMontant } from '../lib/formatage'
 
@@ -56,27 +57,21 @@ export function PageFicheProduitVitrine() {
         <div className="space-y-2">
           <div className="aspect-square w-full overflow-hidden rounded border border-bordure bg-surface-alt">
             {photoActive ? (
-              <picture>
-                {photoActive.grande.webp && (
-                  <source
-                    type="image/webp"
-                    srcSet={[
-                      photoActive.moyenne.webp ? `${photoActive.moyenne.webp} 600w` : null,
-                      photoActive.grande.webp ? `${photoActive.grande.webp} 1200w` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                )}
-                <img
-                  src={photoActive.grande.jpg ?? photoActive.moyenne.jpg ?? undefined}
-                  alt={produit.nom}
-                  width={1200}
-                  height={1200}
-                  className="h-full w-full object-cover"
-                />
-              </picture>
+              <ImageAvecFondu
+                srcJpg={photoActive.grande.jpg ?? photoActive.moyenne.jpg ?? undefined}
+                srcSetWebp={[
+                  photoActive.moyenne.webp ? `${photoActive.moyenne.webp} 600w` : null,
+                  photoActive.grande.webp ? `${photoActive.grande.webp} 1200w` : null,
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+                sizes="(max-width: 768px) 100vw, 50vw"
+                alt={produit.nom}
+                loading="eager"
+                width={1200}
+                height={1200}
+                className="h-full w-full object-cover"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <ImageOff aria-hidden="true" size={48} strokeWidth={1.5} className="text-texte-secondaire" />
@@ -93,12 +88,12 @@ export function PageFicheProduitVitrine() {
                   onClick={() => setIndexPhoto(index)}
                   aria-label={`Photo ${index + 1}`}
                   aria-pressed={index === indexPhoto}
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded border-2 transition-colors duration-150 ${
-                    index === indexPhoto ? 'border-primaire' : 'border-transparent'
+                  className={`h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded border-2 transition-[border-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
+                    index === indexPhoto ? 'border-texte' : 'border-transparent'
                   }`}
                 >
-                  <img
-                    src={photo.vignette.jpg ?? photo.vignette.webp ?? undefined}
+                  <ImageAvecFondu
+                    srcJpg={photo.vignette.jpg ?? photo.vignette.webp ?? undefined}
                     alt=""
                     loading="lazy"
                     width={64}
@@ -145,14 +140,16 @@ export function PageFicheProduitVitrine() {
                       type="button"
                       onClick={() => setVarianteChoisie(variante)}
                       aria-pressed={estChoisie}
-                      className={`h-11 rounded border px-3 text-corps font-medium transition-colors duration-150 ${
+                      className={`flex h-11 cursor-pointer items-center gap-1.5 rounded border px-3 text-corps font-medium transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
                         estChoisie
-                          ? 'border-primaire bg-primaire text-surface'
+                          ? 'border-texte bg-texte text-surface'
                           : 'border-bordure text-texte hover:bg-surface-alt'
                       } ${variante.disponible ? '' : 'opacity-50'}`}
                     >
                       {variante.nom}
-                      {!variante.disponible && ' · Épuisé'}
+                      {!variante.disponible && (
+                        <span className="text-petit font-normal">(épuisé)</span>
+                      )}
                     </button>
                   )
                 })}

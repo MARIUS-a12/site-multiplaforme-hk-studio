@@ -4,7 +4,17 @@
  * Volontairement minimal : pas de bibliothèque de modale, juste un fond
  * assombri et une carte, comme le reste du projet gère ses confirmations
  * (voir lib/confirmations.ts pour l'équivalent côté back-office).
+ *
+ * Entrée : fond en fondu + panneau qui monte de 16px en s'opacifiant
+ * (animate-entree-fondu / animate-entree-panneau, 200ms, se jouent seuls au
+ * montage). Sortie : l'inverse en 150ms — mais une transition ne peut pas
+ * se jouer sur un élément qu'on démonte, donc onFermer() est retardé de
+ * 150ms pendant que la classe "en fermeture" bascule l'opacité/la
+ * position sous transition ; c'est SEULEMENT ce démontage différé qui
+ * laisse le temps à l'animation de sortie de se voir avant de disparaître.
  */
+import { useState } from 'react'
+
 export function PanneauMessage({
   titre,
   message,
@@ -14,25 +24,36 @@ export function PanneauMessage({
   message: string
   onFermer: () => void
 }) {
+  const [enFermeture, setEnFermeture] = useState(false)
+
+  function demanderFermeture() {
+    setEnFermeture(true)
+    setTimeout(onFermer, 150)
+  }
+
   return (
     <div
       role="presentation"
-      onClick={onFermer}
-      className="fixed inset-0 z-20 flex items-end justify-center bg-texte/40 p-4 sm:items-center"
+      onClick={demanderFermeture}
+      className={`fixed inset-0 z-20 flex items-end justify-center bg-texte/40 p-4 transition-opacity duration-rapide ease-disparition sm:items-center ${
+        enFermeture ? 'opacity-0' : 'animate-entree-fondu'
+      }`}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={titre}
         onClick={(evenement) => evenement.stopPropagation()}
-        className="w-full max-w-sm rounded border border-bordure bg-surface p-4"
+        className={`w-full max-w-sm rounded border border-bordure bg-surface p-4 shadow-flottant transition-[opacity,transform] duration-rapide ease-disparition ${
+          enFermeture ? 'translate-y-4 opacity-0' : 'animate-entree-panneau'
+        }`}
       >
         <h2 className="text-titre-section font-semibold text-texte">{titre}</h2>
         <p className="mt-2 text-corps text-texte-secondaire">{message}</p>
         <button
           type="button"
-          onClick={onFermer}
-          className="mt-4 h-11 w-full cursor-pointer rounded bg-primaire text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          onClick={demanderFermeture}
+          className="mt-4 h-11 w-full cursor-pointer rounded bg-texte text-corps font-medium text-surface transition-transform active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1"
         >
           Fermer
         </button>

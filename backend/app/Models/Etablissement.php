@@ -41,6 +41,7 @@ class Etablissement extends Model
         'raison_sociale',
         'email',
         'telephone',
+        'couleur_accent',
         'statut',
         'fuseau_horaire',
         'devise',

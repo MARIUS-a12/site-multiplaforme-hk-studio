@@ -14,6 +14,7 @@ import type { Categorie } from '../api/categories'
 import { archiverCategorie, creerCategorie, reactiverCategorie } from '../api/categories'
 import { BandeauSucces } from '../components/BandeauSucces'
 import { BoutonRetour } from '../components/BoutonRetour'
+import { EtatBouton } from '../components/EtatBouton'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
 import { useCategories } from '../hooks/useCategories'
@@ -105,18 +106,18 @@ export function PageCategories() {
                 setNomNouvelleCategorie(evenement.target.value)
                 setErreurCreation(null)
               }}
-              className={`h-11 w-full rounded border bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
+              className={`h-11 w-full rounded border bg-surface px-3 text-corps text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
                 erreurCreation ? 'border-danger' : 'border-bordure focus:border-primaire'
               }`}
             />
-            {erreurCreation && <p className="mt-1 text-petit text-danger">{erreurCreation}</p>}
+            {erreurCreation && <p className="animate-entree-champ mt-1 text-petit text-danger">{erreurCreation}</p>}
           </div>
           <button
             type="submit"
             disabled={creation.isPending || !nomNouvelleCategorie.trim()}
-            className="h-11 shrink-0 cursor-pointer rounded bg-primaire px-4 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-11 shrink-0 cursor-pointer rounded bg-primaire px-4 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           >
-            {creation.isPending ? 'Ajout…' : 'Ajouter'}
+            <EtatBouton chargement={creation.isPending}>Ajouter</EtatBouton>
           </button>
         </form>
       )}
@@ -157,7 +158,7 @@ export function PageCategories() {
                       aria-label={`Republier ${categorie.nom}`}
                       onClick={() => reactiver(categorie)}
                       disabled={reactivation.isPending}
-                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-primaire focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,color,transform] hover:bg-surface-alt hover:text-primaire active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                     >
                       <ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />
                     </button>
@@ -168,7 +169,7 @@ export function PageCategories() {
                       aria-label={`Archiver ${categorie.nom}`}
                       onClick={() => demanderArchivage(categorie)}
                       disabled={archivage.isPending}
-                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt hover:text-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,color,transform] hover:bg-surface-alt hover:text-danger active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
                     >
                       <Archive aria-hidden="true" size={20} strokeWidth={1.5} />
                     </button>

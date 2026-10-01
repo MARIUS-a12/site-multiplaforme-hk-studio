@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import type { Moi } from '../api/auth'
 import { deconnecter } from '../api/auth'
 import { CLE_MOI } from '../hooks/useMoi'
+import { TransitionPage } from './TransitionPage'
 
 export function CoquilleSuperAdmin({ moi, children }: { moi: Moi; children: ReactNode }) {
   const navigate = useNavigate()
@@ -35,7 +36,7 @@ export function CoquilleSuperAdmin({ moi, children }: { moi: Moi; children: Reac
           <button
             type="button"
             onClick={() => deconnexion.mutate()}
-            className="flex h-11 cursor-pointer items-center gap-1.5 rounded border border-bordure px-3 text-petit font-medium text-texte transition-colors duration-150 hover:bg-surface-alt active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+            className="flex h-11 cursor-pointer items-center gap-1.5 rounded border border-bordure px-3 text-petit font-medium text-texte transition-[background-color,transform] duration-rapide ease-apparition hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
           >
             <LogOut aria-hidden="true" size={20} strokeWidth={1.5} />
             <span className="hidden sm:inline">Déconnexion</span>
@@ -43,7 +44,9 @@ export function CoquilleSuperAdmin({ moi, children }: { moi: Moi; children: Reac
         </div>
       </header>
 
-      <main className="p-4">{children}</main>
+      <main className="p-4">
+        <TransitionPage>{children}</TransitionPage>
+      </main>
     </div>
   )
 }

@@ -49,6 +49,7 @@ vi.mock('./api/vitrine', () => ({
     type: 'boutique',
     logo: null,
     numero_whatsapp: null,
+    couleur_accent: '#146c43',
   }),
   genererLienWhatsapp: vi.fn(),
 }))

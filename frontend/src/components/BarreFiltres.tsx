@@ -40,7 +40,7 @@ export function BarreFiltres({
           placeholder="Rechercher un produit…"
           value={recherche}
           onChange={(evenement) => onRechercheChange(evenement.target.value)}
-          className="h-11 w-full rounded border border-bordure bg-surface pl-10 pr-3 text-corps text-texte transition-colors duration-150 focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
+          className="h-11 w-full rounded border border-bordure bg-surface pl-10 pr-3 text-corps text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
         />
       </div>
 

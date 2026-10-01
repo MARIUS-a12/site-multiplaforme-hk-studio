@@ -47,7 +47,7 @@ export function ChampPrix({
           inputMode="numeric"
           value={affichage}
           onChange={gererChangement}
-          className={`h-11 w-full rounded border bg-surface pl-3 pr-14 text-corps tabular-nums text-texte transition-colors duration-150 focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
+          className={`h-11 w-full rounded border bg-surface pl-3 pr-14 text-corps tabular-nums text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
             erreur ? 'border-danger' : 'border-bordure focus:border-primaire'
           }`}
         />
@@ -55,7 +55,7 @@ export function ChampPrix({
           FCFA
         </span>
       </div>
-      {erreur && <p className="mt-1 text-petit text-danger">{erreur}</p>}
+      {erreur && <p className="animate-entree-champ mt-1 text-petit text-danger">{erreur}</p>}
     </div>
   )
 }

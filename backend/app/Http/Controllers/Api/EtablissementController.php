@@ -51,6 +51,7 @@ class EtablissementController extends Controller
             sousDomaine: Str::lower($request->validated('sous_domaine')),
             email: $request->validated('email'),
             telephone: $request->validated('telephone'),
+            couleurAccent: $request->validated('couleur_accent'),
             nomAdministrateur: $request->validated('nom_administrateur'),
             emailAdministrateur: $request->validated('email_administrateur'),
         );

@@ -71,6 +71,7 @@ export type EtablissementVitrine = {
   type: 'boutique' | 'restaurant'
   logo: string | null
   numero_whatsapp: string | null
+  couleur_accent: string
 }
 
 export type ProduitsVitrinePagines = {

@@ -2,11 +2,15 @@
  * Une carte de la grille publique (voir PageAccueilVitrine) : photo,
  * nom, prix, pastille "Épuisé" si le produit n'est pas disponible. Mène à
  * la fiche produit. Sans photo, un repli neutre (icône) plutôt qu'une image
- * cassée.
+ * cassée. Légère élévation au survol sur écran large (hover: de Tailwind ne
+ * s'applique déjà qu'aux appareils qui supportent réellement le survol —
+ * rien ne se déclenche au doigt sur mobile), léger enfoncement à la
+ * pression, quel que soit l'appareil.
  */
 import { ImageOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { ProduitVitrine } from '../api/vitrine'
+import { ImageAvecFondu } from './ImageAvecFondu'
 import { formaterMontant } from '../lib/formatage'
 
 export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
@@ -15,32 +19,24 @@ export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
   return (
     <Link
       to={`/produit/${produit.id}`}
-      className="group block overflow-hidden rounded border border-bordure bg-surface transition-colors duration-150 hover:border-primaire focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+      className="group block overflow-hidden rounded border border-bordure bg-surface transition-transform hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-surface-alt">
         {photo ? (
-          <picture>
-            {(photo.vignette.webp || photo.moyenne.webp) && (
-              <source
-                type="image/webp"
-                srcSet={[
-                  photo.vignette.webp ? `${photo.vignette.webp} 150w` : null,
-                  photo.moyenne.webp ? `${photo.moyenne.webp} 600w` : null,
-                ]
-                  .filter(Boolean)
-                  .join(', ')}
-                sizes="(max-width: 640px) 45vw, 300px"
-              />
-            )}
-            <img
-              src={photo.moyenne.jpg ?? photo.vignette.jpg ?? undefined}
-              alt=""
-              loading="lazy"
-              width={300}
-              height={300}
-              className="h-full w-full object-cover"
-            />
-          </picture>
+          <ImageAvecFondu
+            srcJpg={photo.moyenne.jpg ?? photo.vignette.jpg ?? undefined}
+            srcSetWebp={[
+              photo.vignette.webp ? `${photo.vignette.webp} 150w` : null,
+              photo.moyenne.webp ? `${photo.moyenne.webp} 600w` : null,
+            ]
+              .filter(Boolean)
+              .join(', ')}
+            sizes="(max-width: 640px) 45vw, 300px"
+            alt=""
+            width={300}
+            height={300}
+            className="h-full w-full object-cover"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <ImageOff aria-hidden="true" size={32} strokeWidth={1.5} className="text-texte-secondaire" />
@@ -55,8 +51,8 @@ export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
       </div>
 
       <div className={`p-3 ${produit.disponible ? '' : 'opacity-60'}`}>
-        <p className="truncate text-corps font-medium text-texte">{produit.nom}</p>
-        <p className="tabular-nums text-corps font-semibold text-texte">{formaterMontant(produit.prix)}</p>
+        <p className="truncate text-corps text-texte-secondaire">{produit.nom}</p>
+        <p className="tabular-nums text-titre-section font-semibold text-texte">{formaterMontant(produit.prix)}</p>
       </div>
     </Link>
   )

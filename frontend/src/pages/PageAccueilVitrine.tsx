@@ -13,6 +13,7 @@ import { SquelettesGrilleVitrine } from '../components/SquelettesGrilleVitrine'
 import { useCategoriesVitrine } from '../hooks/useCategoriesVitrine'
 import { useProduitsVitrine } from '../hooks/useProduitsVitrine'
 import { useValeurDifferee } from '../hooks/useValeurDifferee'
+import { styleEntreeListe } from '../lib/animation'
 
 export function PageAccueilVitrine() {
   const [recherche, setRecherche] = useState('')
@@ -51,23 +52,23 @@ export function PageAccueilVitrine() {
               setRecherche(evenement.target.value)
               setPage(1)
             }}
-            className="h-11 w-full rounded border border-bordure bg-surface pl-10 pr-3 text-corps text-texte transition-colors duration-150 focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
+            className="h-11 w-full rounded border border-bordure bg-surface pl-10 pr-3 text-corps text-texte transition-colors focus:border-texte focus:outline focus:outline-2 focus:outline-texte focus:outline-offset-1"
           />
         </div>
 
         {categories && categories.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-4 overflow-x-auto border-b border-bordure pb-0">
             <button
               type="button"
               onClick={() => choisirCategorie(null)}
               aria-pressed={categorieId === null}
-              className={`h-9 shrink-0 cursor-pointer rounded-full border px-3 text-petit font-medium transition-colors duration-150 ${
+              className={`flex h-11 shrink-0 cursor-pointer items-center border-b-2 px-1 text-corps font-medium transition-[border-color,color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
                 categorieId === null
-                  ? 'border-primaire bg-primaire text-surface'
-                  : 'border-bordure text-texte hover:bg-surface-alt'
+                  ? 'border-accent text-texte'
+                  : 'border-transparent text-texte-secondaire hover:text-texte'
               }`}
             >
-              Toutes
+              Tout
             </button>
             {categories.map((categorie) => (
               <button
@@ -75,10 +76,10 @@ export function PageAccueilVitrine() {
                 type="button"
                 onClick={() => choisirCategorie(categorie.id)}
                 aria-pressed={categorieId === categorie.id}
-                className={`h-9 shrink-0 cursor-pointer rounded-full border px-3 text-petit font-medium transition-colors duration-150 ${
+                className={`flex h-11 shrink-0 cursor-pointer items-center border-b-2 px-1 text-corps font-medium transition-[border-color,color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
                   categorieId === categorie.id
-                    ? 'border-primaire bg-primaire text-surface'
-                    : 'border-bordure text-texte hover:bg-surface-alt'
+                    ? 'border-accent text-texte'
+                    : 'border-transparent text-texte-secondaire hover:text-texte'
                 }`}
               >
                 {categorie.nom}
@@ -96,9 +97,11 @@ export function PageAccueilVitrine() {
 
       {!isPending && !isError && data && data.data.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {data.data.map((produit) => (
-              <CarteProduitVitrine key={produit.id} produit={produit} />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {data.data.map((produit, index) => (
+              <div key={produit.id} className="animate-entree-carte" style={styleEntreeListe(index)}>
+                <CarteProduitVitrine produit={produit} />
+              </div>
             ))}
           </div>
 
@@ -112,7 +115,7 @@ export function PageAccueilVitrine() {
                   type="button"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-colors duration-150 hover:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
                 >
                   Précédent
                 </button>
@@ -120,7 +123,7 @@ export function PageAccueilVitrine() {
                   type="button"
                   disabled={page >= data.meta.last_page}
                   onClick={() => setPage((p) => p + 1)}
-                  className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-colors duration-150 hover:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
                 >
                   Suivant
                 </button>

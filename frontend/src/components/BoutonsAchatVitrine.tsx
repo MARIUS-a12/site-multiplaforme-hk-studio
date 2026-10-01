@@ -14,6 +14,7 @@ import { CreditCard, MessageCircle, ShoppingCart } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import type { VarianteVitrine } from '../api/vitrine'
 import { genererLienWhatsapp } from '../api/vitrine'
+import { EtatBouton } from './EtatBouton'
 import { PanneauMessage } from './PanneauMessage'
 
 export function BoutonsAchatVitrine({
@@ -58,7 +59,7 @@ export function BoutonsAchatVitrine({
           type="button"
           disabled={!peutAcheter}
           onClick={() => setPanneau('paiement')}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded bg-primaire text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded bg-accent text-corps font-medium text-accent-texte transition-[opacity,transform] hover:opacity-90 active:scale-[0.97] active:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           <CreditCard aria-hidden="true" size={20} strokeWidth={1.5} />
           Payer maintenant
@@ -68,27 +69,31 @@ export function BoutonsAchatVitrine({
           type="button"
           disabled={!peutAcheter || lienWhatsapp.isPending}
           onClick={() => lienWhatsapp.mutate()}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-primaire text-corps font-medium text-primaire transition-colors duration-150 hover:bg-primaire/10 active:bg-primaire/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-texte text-corps font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
-          <MessageCircle aria-hidden="true" size={20} strokeWidth={1.5} />
-          {lienWhatsapp.isPending ? 'Préparation…' : 'Commander sur WhatsApp'}
+          <EtatBouton chargement={lienWhatsapp.isPending}>
+            <MessageCircle aria-hidden="true" size={20} strokeWidth={1.5} />
+            Commander sur WhatsApp
+          </EtatBouton>
         </button>
 
         <button
           type="button"
           disabled={!peutAcheter}
           onClick={() => setPanneau('panier')}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte-secondaire transition-colors duration-150 hover:bg-surface-alt active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte-secondaire transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           <ShoppingCart aria-hidden="true" size={20} strokeWidth={1.5} />
           Ajouter au panier
         </button>
       </div>
 
-      {messageBlocage && <p className="mt-2 text-petit text-texte-secondaire">{messageBlocage}</p>}
+      {messageBlocage && (
+        <p className="animate-entree-carte mt-2 text-petit text-texte-secondaire">{messageBlocage}</p>
+      )}
 
       {lienWhatsapp.isError && (
-        <p className="mt-2 text-petit text-danger">
+        <p className="animate-entree-carte mt-2 text-petit text-danger">
           Impossible de préparer le message WhatsApp. Réessayez.
         </p>
       )}

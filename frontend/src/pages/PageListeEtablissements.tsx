@@ -48,7 +48,7 @@ export function PageListeEtablissements() {
         <h1 className="text-titre-page font-semibold text-texte">Établissements</h1>
         <Link
           to="/etablissements/nouveau"
-          className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
         >
           <Plus aria-hidden="true" size={20} strokeWidth={1.5} />
           <span className="hidden sm:inline">Nouvel établissement</span>
@@ -61,7 +61,7 @@ export function PageListeEtablissements() {
           placeholder="Rechercher un établissement…"
           value={recherche}
           onChange={(evenement) => setRecherche(evenement.target.value)}
-          className="h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 sm:max-w-xs"
+          className="h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 sm:max-w-xs"
         />
         <GroupeSegmente options={OPTIONS_TYPE} valeur={type} onChange={setType} />
       </div>
@@ -93,7 +93,7 @@ function LigneEtablissement({ etablissement }: { etablissement: Etablissement })
     <li>
       <Link
         to={`/etablissements/${etablissement.id}`}
-        className="flex flex-col gap-2 p-4 transition-colors duration-150 hover:bg-surface-alt sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-2 p-4 transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.98] sm:flex-row sm:items-center sm:justify-between"
       >
         <div>
           <span className="text-corps font-semibold text-texte">{etablissement.nom}</span>

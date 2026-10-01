@@ -1,32 +1,60 @@
 /**
  * Disposition commune aux pages publiques de la vitrine (accueil, fiche
  * produit) — aucune authentification, aucun rapport avec CoquilleApplication
- * qui, elle, habille le back-office connecté. Juste un en-tête léger avec le
- * nom de l'établissement, qui ramène à l'accueil, et une zone de contenu.
- * Montée par le routeur (voir App.tsx), jamais directement par une page.
+ * qui, elle, habille le back-office connecté. En-tête léger avec le logo (ou,
+ * à défaut, le nom) de l'établissement, qui ramène à l'accueil, et une zone
+ * de contenu. Montée par le routeur (voir App.tsx), jamais directement par
+ * une page.
+ *
+ * La classe "vitrine" (voir index.css) assouplit surface-alt/bordure, et le
+ * style inline pose --color-accent/--color-accent-texte à la couleur de CET
+ * établissement : tout composant sous ce conteneur peut utiliser
+ * bg-accent/text-accent-texte sans jamais savoir de quel établissement il
+ * s'agit, ni calculer lui-même le contraste.
  */
+import type { CSSProperties } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { useEtablissementVitrine } from '../hooks/useEtablissementVitrine'
+import { couleurTexteSurAccent } from '../lib/couleurAccent'
+import { TransitionPage } from './TransitionPage'
 
 export function DispositionVitrine() {
   const { data: etablissement, isPending } = useEtablissementVitrine()
 
+  const styleAccent: CSSProperties | undefined = etablissement
+    ? ({
+        '--color-accent': etablissement.couleur_accent,
+        '--color-accent-texte': couleurTexteSurAccent(etablissement.couleur_accent),
+      } as CSSProperties)
+    : undefined
+
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="vitrine min-h-screen bg-surface" style={styleAccent}>
       <header className="sticky top-0 z-10 border-b border-bordure bg-surface px-4">
         <div className="mx-auto flex h-14 max-w-6xl items-center">
           {isPending ? (
             <div className="h-5 w-40 animate-pulse rounded bg-surface-alt" />
           ) : (
-            <Link to="/" className="truncate text-titre-section font-semibold text-texte">
-              {etablissement?.nom ?? 'Boutique'}
+            <Link to="/" className="flex items-center gap-2 truncate">
+              {etablissement?.logo && (
+                <img
+                  src={etablissement.logo}
+                  alt=""
+                  className="h-8 w-8 shrink-0 rounded border border-accent object-cover"
+                />
+              )}
+              <span className="truncate text-titre-section font-semibold text-texte">
+                {etablissement?.nom ?? 'Boutique'}
+              </span>
             </Link>
           )}
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        <Outlet />
+        <TransitionPage>
+          <Outlet />
+        </TransitionPage>
       </main>
     </div>
   )

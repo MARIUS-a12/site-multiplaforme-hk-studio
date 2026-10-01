@@ -38,7 +38,7 @@ export function ChampSousDomaine({
         value={valeur}
         onChange={(evenement) => onChange(evenement.target.value)}
         placeholder="boutique-test"
-        className={`h-11 w-full rounded border bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
+        className={`h-11 w-full rounded border bg-surface px-3 text-corps text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
           erreur ? 'border-danger' : 'border-bordure focus:border-primaire'
         }`}
       />
@@ -63,7 +63,7 @@ export function ChampSousDomaine({
         </p>
       )}
 
-      {erreur && <p className="mt-1 text-petit text-danger">{erreur}</p>}
+      {erreur && <p className="animate-entree-champ mt-1 text-petit text-danger">{erreur}</p>}
     </div>
   )
 }

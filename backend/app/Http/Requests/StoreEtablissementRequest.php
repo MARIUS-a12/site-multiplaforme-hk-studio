@@ -45,6 +45,7 @@ class StoreEtablissementRequest extends FormRequest
             ],
             'email' => ['nullable', 'email', 'max:255'],
             'telephone' => ['nullable', 'string', 'max:30'],
+            'couleur_accent' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'nom_administrateur' => ['required', 'string', 'max:255'],
             'email_administrateur' => ['required', 'email', 'max:255', 'unique:users,email'],
         ];
@@ -57,6 +58,7 @@ class StoreEtablissementRequest extends FormRequest
             'sous_domaine.not_in' => 'Ce mot est réservé et ne peut pas être utilisé comme sous-domaine.',
             'sous_domaine.unique' => 'Ce sous-domaine est déjà utilisé.',
             'email_administrateur.unique' => 'Cet email est déjà utilisé par un autre compte de la plateforme.',
+            'couleur_accent.regex' => 'La couleur doit être un code hexadécimal à 6 chiffres (ex. #146C43).',
         ];
     }
 }

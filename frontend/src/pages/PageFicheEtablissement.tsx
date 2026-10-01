@@ -12,6 +12,7 @@ import { reactiverEtablissement, suspendreEtablissement } from '../api/etablisse
 import { BandeauMotDePasseGenere } from '../components/BandeauMotDePasseGenere'
 import { BandeauSucces } from '../components/BandeauSucces'
 import { BoutonRetour } from '../components/BoutonRetour'
+import { EtatBouton } from '../components/EtatBouton'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
 import { useEtablissement } from '../hooks/useEtablissement'
@@ -108,6 +109,17 @@ export function PageFicheEtablissement() {
           <Info libelle="Statut" valeur={estActif ? 'Actif' : 'Inactif'} />
           <Info libelle="Email" valeur={etablissement.email ?? '—'} />
           <Info libelle="Téléphone" valeur={etablissement.telephone ?? '—'} />
+          <div>
+            <dt className="text-petit text-texte-secondaire">Couleur de la vitrine</dt>
+            <dd className="flex items-center gap-2 text-corps text-texte">
+              <span
+                aria-hidden="true"
+                className="h-5 w-5 shrink-0 rounded border border-bordure"
+                style={{ backgroundColor: etablissement.couleur_accent ?? '#146c43' }}
+              />
+              {(etablissement.couleur_accent ?? '#146c43').toUpperCase()}
+            </dd>
+          </div>
           <Info libelle="Créé le" valeur={new Date(etablissement.created_at).toLocaleDateString('fr-FR')} />
         </dl>
       </section>
@@ -157,18 +169,18 @@ export function PageFicheEtablissement() {
             type="button"
             onClick={demanderSuspension}
             disabled={suspension.isPending}
-            className="h-11 cursor-pointer rounded border border-danger px-4 text-corps font-medium text-danger transition-colors duration-150 hover:bg-danger/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-11 cursor-pointer rounded border border-danger px-4 text-corps font-medium text-danger transition-[background-color,transform] hover:bg-danger/10 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           >
-            {suspension.isPending ? 'Suspension…' : 'Suspendre cet établissement'}
+            <EtatBouton chargement={suspension.isPending}>Suspendre cet établissement</EtatBouton>
           </button>
         ) : (
           <button
             type="button"
             onClick={() => reactivation.mutate()}
             disabled={reactivation.isPending}
-            className="h-11 cursor-pointer rounded bg-primaire px-4 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-11 cursor-pointer rounded bg-primaire px-4 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           >
-            {reactivation.isPending ? 'Réactivation…' : 'Réactiver cet établissement'}
+            <EtatBouton chargement={reactivation.isPending}>Réactiver cet établissement</EtatBouton>
           </button>
         )}
       </div>

@@ -22,7 +22,7 @@ export function ChampTexte({
   multiligne?: boolean
   placeholder?: string
 }) {
-  const classes = `w-full rounded border bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
+  const classes = `w-full rounded border bg-surface px-3 text-corps text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
     erreur ? 'border-danger' : 'border-bordure focus:border-primaire'
   }`
 
@@ -57,7 +57,7 @@ export function ChampTexte({
           className={`h-11 ${classes}`}
         />
       )}
-      {erreur && <p className="mt-1 text-petit text-danger">{erreur}</p>}
+      {erreur && <p className="animate-entree-champ mt-1 text-petit text-danger">{erreur}</p>}
     </div>
   )
 }

@@ -4,6 +4,7 @@
  * ce n'est pas l'information que le commerçant vient chercher des yeux.
  */
 import type { StatutProduit } from '../api/produits'
+import { CLASSE_POINT_STATUT } from '../lib/statutProduit'
 
 const LIBELLES: Record<StatutProduit, string> = {
   brouillon: 'Brouillon',
@@ -11,19 +12,10 @@ const LIBELLES: Record<StatutProduit, string> = {
   archive: 'Archivé',
 }
 
-// Discret à l'oeil (juste un point + un mot), contrairement à la pastille
-// de stock qui doit sauter aux yeux : le statut est une information
-// secondaire.
-const CLASSES_POINT: Record<StatutProduit, string> = {
-  brouillon: 'bg-bordure',
-  publie: 'bg-succes',
-  archive: 'bg-texte-secondaire',
-}
-
 export function BadgeStatut({ statut }: { statut: StatutProduit }) {
   return (
     <span className="inline-flex items-center gap-1.5 text-petit text-texte-secondaire">
-      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${CLASSES_POINT[statut]}`} />
+      <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${CLASSE_POINT_STATUT[statut]}`} />
       {LIBELLES[statut]}
     </span>
   )

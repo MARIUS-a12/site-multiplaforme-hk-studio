@@ -31,7 +31,7 @@ export function BandeauMotDePasseGenere({
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-colors duration-150 hover:bg-alerte/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          className="-m-1.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,transform] hover:bg-alerte/10 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
         >
           <X aria-hidden="true" size={20} strokeWidth={1.5} />
         </button>
@@ -49,7 +49,7 @@ export function BandeauMotDePasseGenere({
         <button
           type="button"
           onClick={copier}
-          className="flex h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          className="flex h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
         >
           {copie ? (
             <Check aria-hidden="true" size={20} strokeWidth={1.5} />

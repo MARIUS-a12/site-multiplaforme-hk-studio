@@ -24,6 +24,7 @@ import { BlocStock } from '../components/BlocStock'
 import { BoutonRetour } from '../components/BoutonRetour'
 import { ChampPrix } from '../components/ChampPrix'
 import { ChampTexte } from '../components/ChampTexte'
+import { EtatBouton } from '../components/EtatBouton'
 import type { CategorieChoisie } from '../components/ComboboxCategorie'
 import { ComboboxCategorie } from '../components/ComboboxCategorie'
 import { EtatChargement } from '../components/EtatChargement'
@@ -239,7 +240,7 @@ function FormulaireProduit({
 
       <form onSubmit={soumettre} className="space-y-4">
         {erreurGenerique && (
-          <p role="alert" className="border border-danger bg-surface p-3 text-corps text-danger">
+          <p role="alert" className="animate-entree-haut border border-danger bg-surface p-3 text-corps text-danger">
             {erreurGenerique}
           </p>
         )}
@@ -270,7 +271,7 @@ function FormulaireProduit({
             }}
             erreur={erreurs.categorie_id}
           />
-          <Link to="/admin/categories" className="mt-1 inline-block text-petit text-primaire underline">
+          <Link to="/admin/categories" className="mt-1 inline-flex h-11 items-center text-petit text-primaire underline">
             Gérer les catégories
           </Link>
         </div>
@@ -373,9 +374,9 @@ function FormulaireProduit({
             type="button"
             onClick={demanderArchivage}
             disabled={archivage.isPending}
-            className="cursor-pointer text-corps font-medium text-danger underline disabled:opacity-60"
+            className="flex h-11 cursor-pointer items-center text-corps font-medium text-danger underline disabled:opacity-60"
           >
-            {archivage.isPending ? 'Archivage en cours…' : 'Archiver ce produit'}
+            <EtatBouton chargement={archivage.isPending}>Archiver ce produit</EtatBouton>
           </button>
         )}
 
@@ -383,13 +384,11 @@ function FormulaireProduit({
           <button
             type="submit"
             disabled={enregistrement.isPending}
-            className="h-11 flex-1 cursor-pointer rounded bg-primaire text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-11 flex-1 cursor-pointer rounded bg-primaire text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           >
-            {enregistrement.isPending
-              ? 'Enregistrement…'
-              : estModification
-                ? 'Enregistrer les modifications'
-                : 'Créer le produit'}
+            <EtatBouton chargement={enregistrement.isPending}>
+              {estModification ? 'Enregistrer les modifications' : 'Créer le produit'}
+            </EtatBouton>
           </button>
         </div>
       </form>

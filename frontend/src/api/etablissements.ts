@@ -39,6 +39,7 @@ export type EtablissementDetail = {
   statut: string
   email: string | null
   telephone: string | null
+  couleur_accent: string | null
   created_at: string
   domaines: Domaine[]
   utilisateurs: UtilisateurRattache[]
@@ -50,6 +51,7 @@ export type NouvelEtablissementPayload = {
   sous_domaine: string
   email: string | null
   telephone: string | null
+  couleur_accent: string | null
   nom_administrateur: string
   email_administrateur: string
 }

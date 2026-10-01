@@ -22,6 +22,7 @@ class EtablissementDetailResource extends JsonResource
             'statut' => $this->statut,
             'email' => $this->email,
             'telephone' => $this->telephone,
+            'couleur_accent' => $this->couleur_accent,
             'created_at' => $this->created_at,
             'domaines' => $this->domaines->map(fn ($domaine) => [
                 'id' => $domaine->id,

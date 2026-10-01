@@ -14,6 +14,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { connecter } from '../api/auth'
+import { EtatBouton } from '../components/EtatBouton'
 import { CLE_MOI } from '../hooks/useMoi'
 import { reinitialiserGardeRedirection } from '../lib/gardeRedirectionConnexion'
 
@@ -78,7 +79,7 @@ export function PageConnexionUtilisateur() {
           required
           value={email}
           onChange={(evenement) => setEmail(evenement.target.value)}
-          className="mb-4 h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
+          className="mb-4 h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
         />
 
         <label htmlFor="mot_de_passe" className="mb-1 block text-petit font-medium text-texte">
@@ -91,11 +92,11 @@ export function PageConnexionUtilisateur() {
           required
           value={motDePasse}
           onChange={(evenement) => setMotDePasse(evenement.target.value)}
-          className="mb-4 h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors duration-150 focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
+          className="mb-4 h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
         />
 
         {connexion.isError && (
-          <p role="alert" className="mb-4 text-petit text-danger">
+          <p role="alert" className="animate-entree-haut mb-4 text-petit text-danger">
             {messageErreur(connexion.error)}
           </p>
         )}
@@ -103,9 +104,9 @@ export function PageConnexionUtilisateur() {
         <button
           type="submit"
           disabled={connexion.isPending}
-          className="h-11 w-full cursor-pointer rounded bg-primaire text-corps font-medium text-surface transition-colors duration-150 hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-11 w-full cursor-pointer rounded bg-primaire text-corps font-medium text-surface transition-colors hover:bg-primaire-fonce active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {connexion.isPending ? 'Connexion en cours…' : 'Se connecter'}
+          <EtatBouton chargement={connexion.isPending}>Se connecter</EtatBouton>
         </button>
       </form>
     </div>

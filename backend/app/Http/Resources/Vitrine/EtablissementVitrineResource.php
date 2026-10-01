@@ -14,9 +14,15 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * "numero_whatsapp" réutilise Etablissement::telephone : pas de colonne
  * dédiée, ce numéro EST celui du WhatsApp Business du commerçant en
  * pratique, et l'étape ne demande pas de distinguer les deux.
+ *
+ * "couleur_accent" retombe sur le vert de marque de HK Studio quand
+ * l'établissement n'en a pas choisi — jamais null ici, pour que le
+ * frontend n'ait aucun cas particulier à gérer.
  */
 class EtablissementVitrineResource extends JsonResource
 {
+    private const COULEUR_PAR_DEFAUT = '#146c43';
+
     public function toArray(Request $request): array
     {
         return [
@@ -24,6 +30,7 @@ class EtablissementVitrineResource extends JsonResource
             'type' => $this->type,
             'logo' => null,
             'numero_whatsapp' => $this->telephone,
+            'couleur_accent' => $this->couleur_accent ?? self::COULEUR_PAR_DEFAUT,
         ];
     }
 }
