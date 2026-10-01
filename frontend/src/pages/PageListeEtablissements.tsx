@@ -4,7 +4,7 @@
  * le nombre d'établissements reste petit, pas besoin d'un aller-retour
  * serveur par frappe.
  */
-import { Plus, TriangleAlert } from 'lucide-react'
+import { CreditCard, Plus, TriangleAlert } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Etablissement, TypeEtablissement } from '../api/etablissements'
@@ -126,6 +126,13 @@ function LigneEtablissement({ etablissement }: { etablissement: Etablissement })
             className={`h-1.5 w-1.5 rounded-full ${estActif ? 'bg-succes' : 'bg-bordure'}`}
           />
           {estActif ? 'Actif' : 'Inactif'}
+        </span>
+        <span
+          title={etablissement.paiement_configure ? 'Paiement configuré' : 'Paiement non configuré'}
+          className={`inline-flex items-center gap-1 ${etablissement.paiement_configure ? 'text-succes' : 'text-texte-secondaire'}`}
+        >
+          <CreditCard aria-hidden="true" size={14} strokeWidth={1.5} />
+          {etablissement.paiement_configure ? 'Paiement' : 'Sans paiement'}
         </span>
         {champsManquants.length > 0 && (
           <span

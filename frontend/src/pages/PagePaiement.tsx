@@ -1,15 +1,24 @@
 /**
- * Destination du lien "Paiement" du menu utilisateur (Étape 7) — l'intégration
- * de paiement elle-même est une étape à venir, non traitée ici ; cette page
- * existe pour que le lien du menu ne pointe jamais vers un écran absent.
+ * Écran /admin/paiement — chemin commerçant du formulaire de paiement
+ * unique (voir FormulairePaiement), sur son propre établissement.
+ * N'apparaît dans le menu utilisateur que pour qui a gerer_parametres (voir
+ * MenuUtilisateur).
  */
+import { BoutonRetour } from '../components/BoutonRetour'
+import { FormulairePaiement } from '../components/FormulairePaiement'
+import { servicePaiementCommercant } from '../api/paiement'
+
+const service = servicePaiementCommercant()
+
 export function PagePaiement() {
   return (
-    <div className="mx-auto max-w-xl">
-      <h1 className="text-titre-page font-semibold text-texte">Paiement</h1>
-      <p className="mt-3 text-corps text-texte-secondaire">
-        La configuration des moyens de paiement arrive dans une prochaine étape.
-      </p>
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-4 flex items-center gap-2">
+        <BoutonRetour vers="/admin/produits" />
+        <h1 className="text-titre-page font-bold text-texte">Paiement</h1>
+      </div>
+
+      <FormulairePaiement service={service} />
     </div>
   )
 }

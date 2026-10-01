@@ -18,6 +18,8 @@ export type Etablissement = {
   // Étape 6A ter : 'logo' | 'couleur' | 'whatsapp' | 'horaires', vide quand
   // l'identité est complète — voir la pastille "Vitrine incomplète".
   identite_champs_manquants: string[]
+  // Étape 6C-1 : pour savoir qui accompagner — jamais les identifiants.
+  paiement_configure: boolean
 }
 
 export type Domaine = {

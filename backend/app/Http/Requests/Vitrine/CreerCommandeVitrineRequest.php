@@ -49,6 +49,19 @@ class CreerCommandeVitrineRequest extends FormRequest
 
             'note' => ['nullable', 'string', 'max:500'],
             'cle_idempotence' => ['required', 'string', 'max:255'],
+
+            // Étape 6C-1 : aucun appel CinetPay n'existe encore, mais le
+            // refus, lui, doit déjà exister — ne jamais se fier à
+            // l'interface (qui masque déjà le bouton) pour l'empêcher.
+            'paiement_en_ligne' => [
+                'sometimes',
+                'boolean',
+                function (string $attribute, mixed $value, callable $fail): void {
+                    if ($value && ! app(ContexteEtablissement::class)->obtenir()?->paiementEstConfigure()) {
+                        $fail("Le paiement en ligne n'est pas disponible pour cet établissement.");
+                    }
+                },
+            ],
         ];
     }
 

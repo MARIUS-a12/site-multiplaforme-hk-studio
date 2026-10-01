@@ -40,6 +40,7 @@ import { PageIntrouvableVitrine } from './pages/PageIntrouvableVitrine'
 import { PageListeEtablissements } from './pages/PageListeEtablissements'
 import { PageListeProduits } from './pages/PageListeProduits'
 import { PagePaiement } from './pages/PagePaiement'
+import { PagePaiementSuperAdmin } from './pages/PagePaiementSuperAdmin'
 import { PagePanier } from './pages/PagePanier'
 
 export const routes = [
@@ -75,6 +76,7 @@ export const routes = [
       { path: '/etablissements/nouveau', element: <PageFormulaireEtablissement /> },
       { path: '/etablissements/:id', element: <PageFicheEtablissement /> },
       { path: '/etablissements/:id/identite', element: <PageIdentiteEtablissementSuperAdmin /> },
+      { path: '/etablissements/:id/paiement', element: <PagePaiementSuperAdmin /> },
       // Espace commerçant, entièrement sous /admin.
       { path: '/admin', element: <Navigate to="/admin/produits" replace /> },
       { path: '/admin/produits', element: <PageListeProduits /> },

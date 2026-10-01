@@ -195,6 +195,9 @@ export function PageFicheEtablissement() {
         <Bouton variante="secondaire" onClick={() => navigate(`/etablissements/${etablissementId}/identite`)}>
           Modifier l'identité
         </Bouton>
+        <Bouton variante="secondaire" onClick={() => navigate(`/etablissements/${etablissementId}/paiement`)}>
+          Paiement
+        </Bouton>
         {estActif ? (
           <Bouton variante="danger" onClick={demanderSuspension} chargement={suspension.isPending}>
             Suspendre cet établissement

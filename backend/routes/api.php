@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CompteController;
 use App\Http\Controllers\Api\EtablissementController;
 use App\Http\Controllers\Api\IdentiteEtablissementController;
 use App\Http\Controllers\Api\MediaProduitController;
+use App\Http\Controllers\Api\PaiementEtablissementController;
 use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
 use App\Http\Controllers\Api\SessionController;
@@ -75,6 +76,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/etablissements/{etablissement}/identite/logo', [IdentiteEtablissementController::class, 'uploaderLogo']);
     Route::delete('/etablissements/{etablissement}/identite/logo', [IdentiteEtablissementController::class, 'supprimerLogo']);
 
+    // Étape 6C-1 — paiement (chemin super-admin, pour dépanner un
+    // commerçant) : MÊME contrôleur, MÊMES services que le chemin
+    // commerçant ci-dessous, voir PaiementEtablissementController.
+    Route::get('/etablissements/{etablissement}/paiement', [PaiementEtablissementController::class, 'show']);
+    Route::put('/etablissements/{etablissement}/paiement', [PaiementEtablissementController::class, 'update']);
+    Route::delete('/etablissements/{etablissement}/paiement', [PaiementEtablissementController::class, 'destroy']);
+
     Route::middleware('resoudre.etablissement')->group(function () {
         Route::get('/produits', [ProduitController::class, 'index']);
         Route::post('/produits', [ProduitController::class, 'store']);
@@ -102,6 +110,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/parametres/etablissement', [IdentiteEtablissementController::class, 'update']);
         Route::post('/parametres/etablissement/logo', [IdentiteEtablissementController::class, 'uploaderLogo']);
         Route::delete('/parametres/etablissement/logo', [IdentiteEtablissementController::class, 'supprimerLogo']);
+
+        // Étape 6C-1 — paiement (chemin commerçant, son propre
+        // établissement) : lecture ET écriture exigent "gerer_parametres"
+        // (voir PaiementEtablissementController::resoudreCible()).
+        Route::get('/parametres/paiement', [PaiementEtablissementController::class, 'show']);
+        Route::put('/parametres/paiement', [PaiementEtablissementController::class, 'update']);
+        Route::delete('/parametres/paiement', [PaiementEtablissementController::class, 'destroy']);
 
         Route::get('/statistiques', [StatistiquesController::class, 'index']);
     });

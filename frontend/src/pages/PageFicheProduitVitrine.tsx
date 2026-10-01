@@ -15,6 +15,7 @@ import { BoutonRetour } from '../components/BoutonRetour'
 import { BoutonsAchatVitrine } from '../components/BoutonsAchatVitrine'
 import { EtatErreur } from '../components/EtatErreur'
 import { ImageAvecFondu } from '../components/ImageAvecFondu'
+import { useEtablissementVitrine } from '../hooks/useEtablissementVitrine'
 import { useProduitVitrine } from '../hooks/useProduitVitrine'
 import { formaterMontant } from '../lib/formatage'
 
@@ -22,6 +23,7 @@ export function PageFicheProduitVitrine() {
   const { id } = useParams()
   const produitId = id ? Number(id) : null
 
+  const { data: etablissement } = useEtablissementVitrine()
   const { data: produit, isPending, isError, error, refetch } = useProduitVitrine(produitId)
   const [indexPhoto, setIndexPhoto] = useState(0)
   const [varianteChoisie, setVarianteChoisie] = useState<VarianteVitrine | null>(null)
@@ -165,6 +167,7 @@ export function PageFicheProduitVitrine() {
             disponible={produit.disponible}
             variantes={produit.variantes}
             varianteChoisie={varianteChoisie}
+            paiementDisponible={etablissement?.paiement_disponible ?? false}
           />
         </div>
       </div>

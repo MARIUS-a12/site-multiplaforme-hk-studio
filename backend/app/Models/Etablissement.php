@@ -16,6 +16,16 @@ class Etablissement extends Model
     protected $table = 'etablissements';
 
     /**
+     * Étape 6C-1 : jamais en clair hors de ce modèle, ni en masse-assignation
+     * (absents de $fillable, voir ConfigurerPaiementEtablissement qui les
+     * pose par affectation directe), ni dans une sérialisation par défaut.
+     * Une Resource qui doit exposer une version masquée (quatre derniers
+     * caractères) lit l'attribut déchiffré directement sur le modèle — ce
+     * qui fonctionne malgré $hidden, qui ne joue que sur la sérialisation.
+     */
+    protected $hidden = ['cinetpay_site_id', 'cinetpay_cle_api', 'cinetpay_secret'];
+
+    /**
      * Miroir des défauts posés en base, pour qu'un établissement tout juste
      * créé (avant tout rechargement) expose déjà des valeurs exploitables —
      * même pattern que Produit/Categorie. Sans lui, CreerEtablissement
@@ -33,6 +43,10 @@ class Etablissement extends Model
         return [
             'statut' => StatutEtablissement::class,
             'horaires' => 'array',
+            'cinetpay_site_id' => 'encrypted',
+            'cinetpay_cle_api' => 'encrypted',
+            'cinetpay_secret' => 'encrypted',
+            'paiement_configure_le' => 'datetime',
         ];
     }
 
@@ -108,6 +122,24 @@ class Etablissement extends Model
     public function commandes(): HasMany
     {
         return $this->hasMany(Commande::class);
+    }
+
+    public function configurateurPaiement(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'paiement_configure_par');
+    }
+
+    /**
+     * Propriété CALCULÉE, jamais une colonne qu'on coche : vraie seulement
+     * quand les trois identifiants CinetPay sont renseignés. Pilote à la
+     * fois l'affichage du bouton "Payer maintenant" en vitrine et le refus
+     * serveur d'une commande qui demanderait le paiement en ligne sans eux.
+     */
+    public function paiementEstConfigure(): bool
+    {
+        return $this->cinetpay_site_id !== null
+            && $this->cinetpay_cle_api !== null
+            && $this->cinetpay_secret !== null;
     }
 
     public function estActif(): bool

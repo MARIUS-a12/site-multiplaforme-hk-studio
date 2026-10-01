@@ -87,6 +87,9 @@ export type EtablissementVitrine = {
   lien_tiktok: string | null
   lien_site_web: string | null
   couleur_accent: string
+  // Étape 6C-1 : jamais les identifiants, seulement s'ils existent tous les
+  // trois — pilote la présence du bouton "Payer maintenant".
+  paiement_disponible: boolean
 }
 
 export type ProduitsVitrinePagines = {

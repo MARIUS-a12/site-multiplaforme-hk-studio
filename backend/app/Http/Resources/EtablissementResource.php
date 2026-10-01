@@ -21,6 +21,9 @@ class EtablissementResource extends JsonResource
             // jamais renvoyer un 0 trompeur.
             'produits_count' => $this->whenCounted('produits'),
             'created_at' => $this->created_at,
+            // Étape 6C-1 : colonne "Paiement" de la liste super-admin, pour
+            // savoir qui accompagner — jamais les identifiants eux-mêmes.
+            'paiement_configure' => $this->paiementEstConfigure(),
             // Étape 6A ter : ce que la pastille "Vitrine incomplète" doit
             // dire au survol — vide quand tout y est.
             'identite_champs_manquants' => array_values(array_filter([
