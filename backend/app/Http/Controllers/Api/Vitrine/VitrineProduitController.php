@@ -105,7 +105,8 @@ class VitrineProduitController extends Controller
                 ->findOrFail($request->integer('variante_id'));
         }
 
-        $numero = app(ContexteEtablissement::class)->obtenir()?->telephone;
+        $etablissementCourant = app(ContexteEtablissement::class)->obtenir();
+        $numero = $etablissementCourant?->telephone_whatsapp ?? $etablissementCourant?->telephone;
 
         abort_if(blank($numero), 422, "Cet établissement n'a pas de numéro WhatsApp configuré.");
 

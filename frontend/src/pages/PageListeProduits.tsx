@@ -17,6 +17,7 @@ import { CLASSE_BORDURE_STATUT } from '../lib/statutProduit'
 import { BandeauSucces } from '../components/BandeauSucces'
 import { BandeStatistiques } from '../components/BandeStatistiques'
 import { BarreFiltres } from '../components/BarreFiltres'
+import { Bouton } from '../components/Bouton'
 import { CarreInitiale } from '../components/CarreInitiale'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
@@ -117,15 +118,15 @@ export function PageListeProduits() {
       {messageSucces && <BandeauSucces message={messageSucces} onFermer={fermerBandeauSucces} />}
 
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-titre-page font-semibold text-texte">Produits</h1>
+        <h1 className="text-titre-page font-bold text-texte">Produits</h1>
         {peutGererCatalogue && (
-          <Link
-            to="/admin/produits/nouveau"
-            className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          <Bouton
+            variante="principal"
+            icone={<Plus aria-hidden="true" size={20} strokeWidth={1.5} />}
+            onClick={() => navigate('/admin/produits/nouveau')}
           >
-            <Plus aria-hidden="true" size={20} strokeWidth={1.5} />
             <span className="hidden sm:inline">Ajouter un produit</span>
-          </Link>
+          </Bouton>
         )}
       </div>
 
@@ -168,7 +169,7 @@ export function PageListeProduits() {
               return (
                 <li
                   key={produit.id}
-                  className={`border border-bordure border-l-[3px] bg-surface p-4 ${CLASSE_BORDURE_STATUT[produit.statut]}`}
+                  className={`rounded-lg border border-bordure border-l-[3px] bg-surface p-4 ${CLASSE_BORDURE_STATUT[produit.statut]}`}
                 >
                   <div className="flex items-start gap-3">
                     <CarreInitiale nom={produit.nom} taille={48} photo={produit.medias[0]?.vignette} />
@@ -191,33 +192,34 @@ export function PageListeProduits() {
 
                   {peutGererCatalogue && (
                     <div className="mt-3 flex gap-2 border-t border-bordure pt-3">
-                      <Link
-                        to={`/admin/produits/${produit.id}/modifier`}
-                        className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+                      <Bouton
+                        variante="secondaire"
+                        className="flex-1"
+                        icone={<Pencil aria-hidden="true" size={20} strokeWidth={1.5} />}
+                        onClick={() => navigate(`/admin/produits/${produit.id}/modifier`)}
                       >
-                        <Pencil aria-hidden="true" size={20} strokeWidth={1.5} />
                         Modifier
-                      </Link>
+                      </Bouton>
                       {estArchive ? (
-                        <button
-                          type="button"
+                        <Bouton
+                          variante="secondaire"
+                          className="flex-1 border-primaire text-primaire hover:bg-primaire/10 active:bg-primaire/10"
+                          icone={<ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />}
                           onClick={() => republier(produit)}
-                          disabled={republication.isPending}
-                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-primaire text-corps font-medium text-primaire transition-[background-color,transform] hover:bg-primaire/10 active:scale-[0.97] active:bg-primaire/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+                          chargement={republication.isPending}
                         >
-                          <ArchiveRestore aria-hidden="true" size={20} strokeWidth={1.5} />
                           Republier
-                        </button>
+                        </Bouton>
                       ) : (
-                        <button
-                          type="button"
+                        <Bouton
+                          variante="danger"
+                          className="flex-1"
+                          icone={<Archive aria-hidden="true" size={20} strokeWidth={1.5} />}
                           onClick={() => demanderArchivage(produit)}
-                          disabled={archivage.isPending}
-                          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-danger text-corps font-medium text-danger transition-[background-color,transform] hover:bg-danger/10 active:scale-[0.97] active:bg-danger/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+                          chargement={archivage.isPending}
                         >
-                          <Archive aria-hidden="true" size={20} strokeWidth={1.5} />
                           Archiver
-                        </button>
+                        </Bouton>
                       )}
                     </div>
                   )}
@@ -227,7 +229,8 @@ export function PageListeProduits() {
           </ul>
 
           {/* Écran large : tableau, en-têtes cliquables pour le tri. */}
-          <table className="hidden w-full border-separate border-spacing-0 md:table">
+          <div className="hidden overflow-hidden rounded-lg border border-bordure bg-surface md:block">
+          <table className="w-full border-separate border-spacing-0">
             <thead>
               <tr className="bg-surface-alt text-left text-petit text-texte-secondaire">
                 <EnteteTriable
@@ -322,28 +325,24 @@ export function PageListeProduits() {
               })}
             </tbody>
           </table>
+          </div>
 
           <div className="flex items-center justify-between gap-3 pt-1 text-petit text-texte-secondaire">
             <span className="tabular-nums">
               Page {data.meta.current_page} sur {data.meta.last_page} — {data.meta.total} produits
             </span>
             <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={page <= 1 || isFetching}
-                onClick={() => setPage((p) => p - 1)}
-                className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-              >
+              <Bouton variante="secondaire" taille="petite" disabled={page <= 1 || isFetching} onClick={() => setPage((p) => p - 1)}>
                 Précédent
-              </button>
-              <button
-                type="button"
+              </Bouton>
+              <Bouton
+                variante="secondaire"
+                taille="petite"
                 disabled={page >= data.meta.last_page || isFetching}
                 onClick={() => setPage((p) => p + 1)}
-                className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
               >
                 Suivant
-              </button>
+              </Bouton>
             </div>
           </div>
         </>

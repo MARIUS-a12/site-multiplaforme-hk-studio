@@ -9,8 +9,10 @@
  * Aucune des pages du back-office commerçant (produits, catégories...) n'a
  * de sens pour lui et elles échoueraient toutes en 400 (aucun
  * établissement à filtrer) : on le confine à /etablissements/*, quelle que
- * soit l'URL demandée.
+ * soit l'URL demandée — sauf /admin/compte (Étape 7), accessible à TOUT
+ * utilisateur authentifié sans distinction de rôle, lui compris.
  */
+const CHEMIN_COMPTE = '/admin/compte'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useMoi } from '../hooks/useMoi'
 import { CoquilleApplication } from './CoquilleApplication'
@@ -35,7 +37,7 @@ export function RouteProtegee() {
   }
 
   if (moi.etablissement === null) {
-    if (!location.pathname.startsWith('/etablissements')) {
+    if (!location.pathname.startsWith('/etablissements') && location.pathname !== CHEMIN_COMPTE) {
       return <Navigate to="/etablissements" replace />
     }
 

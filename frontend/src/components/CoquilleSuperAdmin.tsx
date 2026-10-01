@@ -4,12 +4,13 @@
  * établissement. Montée par RouteProtegee, jamais par une route du
  * routeur directement.
  */
-import { LogOut } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import type { Moi } from '../api/auth'
 import { deconnecter } from '../api/auth'
+import { Bouton } from './Bouton'
 import { CLE_MOI } from '../hooks/useMoi'
 import { TransitionPage } from './TransitionPage'
 
@@ -33,14 +34,23 @@ export function CoquilleSuperAdmin({ moi, children }: { moi: Moi; children: Reac
           <span className="hidden truncate text-petit text-texte-secondaire sm:inline">
             {moi.utilisateur.nom}
           </span>
-          <button
-            type="button"
-            onClick={() => deconnexion.mutate()}
-            className="flex h-11 cursor-pointer items-center gap-1.5 rounded border border-bordure px-3 text-petit font-medium text-texte transition-[background-color,transform] duration-rapide ease-apparition hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+          <Bouton
+            variante="secondaire"
+            taille="petite"
+            icone={<User aria-hidden="true" size={18} strokeWidth={1.5} />}
+            onClick={() => navigate('/admin/compte')}
           >
-            <LogOut aria-hidden="true" size={20} strokeWidth={1.5} />
+            <span className="hidden sm:inline">Mon compte</span>
+          </Bouton>
+          <Bouton
+            variante="secondaire"
+            taille="petite"
+            icone={<LogOut aria-hidden="true" size={18} strokeWidth={1.5} />}
+            chargement={deconnexion.isPending}
+            onClick={() => deconnexion.mutate()}
+          >
             <span className="hidden sm:inline">Déconnexion</span>
-          </button>
+          </Bouton>
         </div>
       </header>
 

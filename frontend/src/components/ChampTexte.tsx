@@ -12,6 +12,8 @@ export function ChampTexte({
   requis,
   multiligne,
   placeholder,
+  type = 'text',
+  autoComplete,
 }: {
   id: string
   label: string
@@ -21,6 +23,8 @@ export function ChampTexte({
   requis?: boolean
   multiligne?: boolean
   placeholder?: string
+  type?: 'text' | 'email' | 'password'
+  autoComplete?: string
 }) {
   const classes = `w-full rounded border bg-surface px-3 text-corps text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
     erreur ? 'border-danger' : 'border-bordure focus:border-primaire'
@@ -49,11 +53,12 @@ export function ChampTexte({
       ) : (
         <input
           id={id}
-          type="text"
+          type={type}
           value={valeur}
           onChange={(evenement) => onChange(evenement.target.value)}
           placeholder={placeholder}
           required={requis}
+          autoComplete={autoComplete}
           className={`h-11 ${classes}`}
         />
       )}

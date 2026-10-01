@@ -50,12 +50,12 @@ export function PageFicheProduitVitrine() {
   const disponibleAffiche = varianteChoisie ? varianteChoisie.disponible : produit.disponible
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-4">
+    <div className="mx-auto max-w-5xl space-y-8 pb-6">
       <BoutonRetour vers="/" />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="space-y-2">
-          <div className="aspect-square w-full overflow-hidden rounded border border-bordure bg-surface-alt">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
+        <div className="space-y-3">
+          <div className="aspect-square w-full overflow-hidden rounded-lg border border-bordure bg-surface-alt">
             {photoActive ? (
               <ImageAvecFondu
                 srcJpg={photoActive.grande.jpg ?? photoActive.moyenne.jpg ?? undefined}
@@ -88,7 +88,7 @@ export function PageFicheProduitVitrine() {
                   onClick={() => setIndexPhoto(index)}
                   aria-label={`Photo ${index + 1}`}
                   aria-pressed={index === indexPhoto}
-                  className={`h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded border-2 transition-[border-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
+                  className={`h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-md border-2 transition-[border-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
                     index === indexPhoto ? 'border-texte' : 'border-transparent'
                   }`}
                 >
@@ -106,25 +106,27 @@ export function PageFicheProduitVitrine() {
           )}
         </div>
 
-        <div className="space-y-4">
-          <div>
+        <div className="space-y-6">
+          <div className="space-y-1">
             {produit.categorie && (
-              <p className="text-petit text-texte-secondaire">{produit.categorie.nom}</p>
+              <p className="text-petit font-medium text-texte-secondaire">{produit.categorie.nom}</p>
             )}
-            <h1 className="text-titre-page font-semibold text-texte">{produit.nom}</h1>
+            <h1 className="text-titre-page font-bold text-texte">{produit.nom}</h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-titre-section font-semibold tabular-nums text-texte">
+          <div className="flex items-center gap-3">
+            <span className="text-titre-page font-bold tabular-nums text-texte">
               {formaterMontant(prixAffiche)}
             </span>
             {!disponibleAffiche && (
-              <span className="rounded bg-texte px-2 py-1 text-petit font-medium text-surface">Épuisé</span>
+              <span className="rounded-md bg-texte px-2 py-1 text-petit font-medium text-surface">Épuisé</span>
             )}
           </div>
 
           {produit.description && (
-            <p className="whitespace-pre-line text-corps text-texte-secondaire">{produit.description}</p>
+            <p className="whitespace-pre-line text-corps leading-relaxed text-texte-secondaire">
+              {produit.description}
+            </p>
           )}
 
           {produit.variantes.length > 0 && (
@@ -140,7 +142,7 @@ export function PageFicheProduitVitrine() {
                       type="button"
                       onClick={() => setVarianteChoisie(variante)}
                       aria-pressed={estChoisie}
-                      className={`flex h-11 cursor-pointer items-center gap-1.5 rounded border px-3 text-corps font-medium transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
+                      className={`flex h-11 cursor-pointer items-center gap-1.5 rounded-md border px-3 text-corps font-medium transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 ${
                         estChoisie
                           ? 'border-texte bg-texte text-surface'
                           : 'border-bordure text-texte hover:bg-surface-alt'

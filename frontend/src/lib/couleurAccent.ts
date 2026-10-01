@@ -25,3 +25,13 @@ export function couleurTexteSurAccent(couleurAccent: string): '#000000' | '#ffff
 
   return contrasteAvecBlanc >= contrasteAvecNoir ? '#ffffff' : '#000000'
 }
+
+/**
+ * Même calcul que ContrasteCouleur côté serveur — repris ici uniquement pour
+ * un retour visuel immédiat pendant la saisie (voir FormulaireIdentiteEtablissement).
+ * Le serveur reste seul juge : c'est lui qui refuse ou accepte à
+ * l'enregistrement, jamais ce calcul côté client.
+ */
+export function ratioContrasteAvecBlanc(hex: string): number {
+  return 1.05 / (luminanceRelative(hex) + 0.05)
+}

@@ -19,7 +19,7 @@ export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
   return (
     <Link
       to={`/produit/${produit.id}`}
-      className="group block overflow-hidden rounded border border-bordure bg-surface transition-transform hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1"
+      className="group block overflow-hidden rounded-lg border border-bordure bg-surface transition-[transform,box-shadow,border-color] duration-rapide ease-apparition hover:-translate-y-0.5 hover:border-bordure-forte hover:shadow-carte active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-surface-alt">
         {photo ? (
@@ -35,7 +35,7 @@ export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
             alt=""
             width={300}
             height={300}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-normale ease-apparition group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -44,7 +44,7 @@ export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
         )}
 
         {!produit.disponible && (
-          <span className="absolute left-2 top-2 rounded bg-texte px-2 py-1 text-petit font-medium text-surface">
+          <span className="absolute left-2 top-2 rounded-md bg-texte px-2 py-1 text-petit font-medium text-surface">
             Épuisé
           </span>
         )}
@@ -52,7 +52,7 @@ export function CarteProduitVitrine({ produit }: { produit: ProduitVitrine }) {
 
       <div className={`p-3 ${produit.disponible ? '' : 'opacity-60'}`}>
         <p className="truncate text-corps text-texte-secondaire">{produit.nom}</p>
-        <p className="tabular-nums text-titre-section font-semibold text-texte">{formaterMontant(produit.prix)}</p>
+        <p className="tabular-nums text-titre-section font-bold text-texte">{formaterMontant(produit.prix)}</p>
       </div>
     </Link>
   )

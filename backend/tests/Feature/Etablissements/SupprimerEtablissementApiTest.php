@@ -1,0 +1,163 @@
+<?php
+
+namespace Tests\Feature\Etablissements;
+
+use App\Models\Categorie;
+use App\Models\Domaine;
+use App\Models\Etablissement;
+use App\Models\EtablissementUtilisateur;
+use App\Models\Produit;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+/**
+ * Étape 7 — suppression définitive d'un établissement (super-admin) : on ne
+ * détruit jamais un historique de ventes, donc bloquée dès qu'il reste une
+ * commande. Réutilise les comptes de démo (voir UtilisateursDemoSeeder) :
+ * Awa est admin de chez-awa, Marius est le super-admin.
+ */
+class SupprimerEtablissementApiTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private const MOT_DE_PASSE = 'motdepasse';
+
+    private function depuis(string $hote): static
+    {
+        return $this->withHeader('Referer', "http://{$hote}:8000");
+    }
+
+    private function connecte(string $hote, string $email): static
+    {
+        $this->depuis($hote)->postJson("http://{$hote}:8000/api/connexion", [
+            'email' => $email,
+            'mot_de_passe' => self::MOT_DE_PASSE,
+        ])->assertStatus(200);
+
+        return $this;
+    }
+
+    private function hoteSuperAdmin(): string
+    {
+        return config('tenancy.hote_super_admin');
+    }
+
+    public function test_6_suppression_avec_commande_refusee_et_ne_supprime_rien(): void
+    {
+        $this->seed();
+        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
+
+        $produit = Produit::factory()->for($chezAwa)->publie()->create([
+            'prix' => 1500,
+            'quantite_stock' => 5,
+            'quantite_reservee' => 0,
+        ]);
+
+        $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
+            'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
+            'client' => ['nom' => 'Fatou Koné', 'telephone' => '0701020304'],
+            'cle_idempotence' => 'cle-suppression-bloquee',
+        ])->assertStatus(201);
+
+        $hote = $this->hoteSuperAdmin();
+        $this->connecte($hote, 'super@plateforme.test');
+
+        $reponse = $this->depuis($hote)->deleteJson("http://{$hote}:8000/api/etablissements/{$chezAwa->id}", [
+            'nom_confirmation' => $chezAwa->nom,
+        ]);
+
+        $reponse->assertStatus(422);
+        $this->assertSame(1, $reponse->json('nombre_commandes'));
+        $this->assertDatabaseHas('etablissements', ['id' => $chezAwa->id]);
+        $this->assertDatabaseHas('produits', ['id' => $produit->id]);
+    }
+
+    public function test_7_suppression_sans_commande_supprime_tout(): void
+    {
+        $this->seed();
+        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
+        $categorie = Categorie::factory()->for($chezAwa)->create();
+        $produit = Produit::factory()->for($chezAwa)->for($categorie)->create();
+        $domaineId = Domaine::where('etablissement_id', $chezAwa->id)->value('id');
+        $adminId = User::where('email', 'awa@chez-awa.test')->value('id');
+
+        $hote = $this->hoteSuperAdmin();
+        $this->connecte($hote, 'super@plateforme.test');
+
+        $reponse = $this->depuis($hote)->deleteJson("http://{$hote}:8000/api/etablissements/{$chezAwa->id}", [
+            'nom_confirmation' => $chezAwa->nom,
+        ]);
+
+        $reponse->assertStatus(204);
+        $this->assertDatabaseMissing('etablissements', ['id' => $chezAwa->id]);
+        $this->assertDatabaseMissing('produits', ['id' => $produit->id]);
+        $this->assertDatabaseMissing('categories', ['id' => $categorie->id]);
+        $this->assertDatabaseMissing('domaines', ['id' => $domaineId]);
+        $this->assertDatabaseMissing('users', ['id' => $adminId]);
+        $this->assertDatabaseHas('journaux_audit', ['action' => 'etablissement_supprime']);
+    }
+
+    public function test_8_utilisateur_rattache_a_deux_etablissements_survit(): void
+    {
+        $this->seed();
+        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
+        $maquisDuPort = Etablissement::where('slug', 'maquis-du-port')->firstOrFail();
+        $awa = User::where('email', 'awa@chez-awa.test')->firstOrFail();
+        $roleOperateur = Role::where('nom', 'operateur')->value('id');
+
+        // Awa, déjà admin de chez-awa, est AUSSI rattachée à maquis-du-port.
+        EtablissementUtilisateur::create([
+            'etablissement_id' => $maquisDuPort->id,
+            'utilisateur_id' => $awa->id,
+            'role_id' => $roleOperateur,
+            'statut' => 'actif',
+        ]);
+
+        $hote = $this->hoteSuperAdmin();
+        $this->connecte($hote, 'super@plateforme.test');
+
+        $this->depuis($hote)->deleteJson("http://{$hote}:8000/api/etablissements/{$chezAwa->id}", [
+            'nom_confirmation' => $chezAwa->nom,
+        ])->assertStatus(204);
+
+        $this->assertDatabaseHas('users', ['id' => $awa->id]);
+        $this->assertDatabaseHas('etablissement_utilisateurs', [
+            'utilisateur_id' => $awa->id,
+            'etablissement_id' => $maquisDuPort->id,
+        ]);
+    }
+
+    public function test_9_admin_etablissement_recoit_403_sur_suppression(): void
+    {
+        $this->seed();
+        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
+
+        $this->connecte('chez-awa.localhost', 'awa@chez-awa.test');
+
+        $reponse = $this->depuis('chez-awa.localhost')->deleteJson("http://chez-awa.localhost:8000/api/etablissements/{$chezAwa->id}", [
+            'nom_confirmation' => $chezAwa->nom,
+        ]);
+
+        $reponse->assertStatus(403);
+        $this->assertDatabaseHas('etablissements', ['id' => $chezAwa->id]);
+    }
+
+    public function test_nom_de_confirmation_incorrect_refuse(): void
+    {
+        $this->seed();
+        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
+
+        $hote = $this->hoteSuperAdmin();
+        $this->connecte($hote, 'super@plateforme.test');
+
+        $reponse = $this->depuis($hote)->deleteJson("http://{$hote}:8000/api/etablissements/{$chezAwa->id}", [
+            'nom_confirmation' => 'Un autre nom',
+        ]);
+
+        $reponse->assertStatus(422);
+        $reponse->assertJsonValidationErrors(['nom_confirmation']);
+        $this->assertDatabaseHas('etablissements', ['id' => $chezAwa->id]);
+    }
+}

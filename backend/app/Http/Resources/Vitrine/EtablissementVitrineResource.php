@@ -2,18 +2,20 @@
 
 namespace App\Http\Resources\Vitrine;
 
+use App\Http\Resources\LogoResource;
+use App\Support\Horaires\EtatHoraires;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * En-tête de la vitrine (voir GET /api/vitrine/etablissement). "logo" vaut
- * toujours null pour l'instant : aucun mécanisme d'envoi de logo n'existe
- * encore côté back-office — ce champ existe déjà côté contrat pour ne pas
- * casser le frontend le jour où il sera posé.
+ * En-tête et pied de page de la vitrine (voir GET /api/vitrine/etablissement,
+ * Étape 6A ter). Seuls les champs RENSEIGNÉS apparaissent — jamais une ligne
+ * vide ni un "non renseigné" : au frontend de n'afficher que ce qui est
+ * non-null (voir PiedDePageVitrine côté composants).
  *
- * "numero_whatsapp" réutilise Etablissement::telephone : pas de colonne
- * dédiée, ce numéro EST celui du WhatsApp Business du commerçant en
- * pratique, et l'étape ne demande pas de distinguer les deux.
+ * "numero_whatsapp" retombe sur Etablissement::telephone si
+ * telephone_whatsapp n'a pas encore été renseigné (compatibilité avec les
+ * établissements créés avant l'Étape 6A ter, qui n'avaient que ce champ).
  *
  * "couleur_accent" retombe sur le vert de marque de HK Studio quand
  * l'établissement n'en a pas choisi — jamais null ici, pour que le
@@ -28,8 +30,18 @@ class EtablissementVitrineResource extends JsonResource
         return [
             'nom' => $this->nom,
             'type' => $this->type,
-            'logo' => null,
-            'numero_whatsapp' => $this->telephone,
+            'description' => $this->description,
+            'logo' => $this->logoMedia ? new LogoResource($this->logoMedia) : null,
+            'numero_whatsapp' => $this->telephone_whatsapp ?? $this->telephone,
+            'telephone_fixe' => $this->telephone_fixe,
+            'email_contact' => $this->email_contact,
+            'adresse' => $this->adresse,
+            'horaires' => $this->horaires,
+            'etat_ouverture' => EtatHoraires::calculer($this->horaires),
+            'lien_facebook' => $this->lien_facebook,
+            'lien_instagram' => $this->lien_instagram,
+            'lien_tiktok' => $this->lien_tiktok,
+            'lien_site_web' => $this->lien_site_web,
             'couleur_accent' => $this->couleur_accent ?? self::COULEUR_PAR_DEFAUT,
         ];
     }

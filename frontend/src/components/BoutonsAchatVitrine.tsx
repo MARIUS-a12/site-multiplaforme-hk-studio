@@ -79,21 +79,26 @@ export function BoutonsAchatVitrine({
   return (
     <div>
       <div className="flex flex-col gap-3 md:flex-row">
+        {/* Principal : l'action la plus engageante, la plus visible des
+            trois — pleine, dense, une vraie ombre qui s'aplatit à la
+            pression pour suggérer la matière. */}
         <button
           type="button"
           disabled={!peutAcheter}
           onClick={() => setPanneau('paiement')}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded bg-accent text-corps font-medium text-accent-texte transition-[opacity,transform] hover:opacity-90 active:scale-[0.97] active:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md bg-accent text-corps font-semibold text-accent-texte shadow-bouton transition-[opacity,transform,box-shadow] duration-rapide ease-apparition hover:opacity-90 active:translate-y-px active:scale-[0.97] active:opacity-90 active:shadow-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 disabled:active:shadow-bouton disabled:active:translate-y-0"
         >
           <CreditCard aria-hidden="true" size={20} strokeWidth={1.5} />
           Payer maintenant
         </button>
 
+        {/* Secondaire : contour marqué, moins engageant que le paiement
+            direct mais toujours une vraie action d'achat. */}
         <button
           type="button"
           disabled={!peutAcheter || lienWhatsapp.isPending}
           onClick={() => lienWhatsapp.mutate()}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-texte text-corps font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-texte text-corps font-medium text-texte transition-[background-color,transform] duration-rapide ease-apparition hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           <EtatBouton chargement={lienWhatsapp.isPending}>
             <MessageCircle aria-hidden="true" size={20} strokeWidth={1.5} />
@@ -101,11 +106,12 @@ export function BoutonsAchatVitrine({
           </EtatBouton>
         </button>
 
+        {/* Tertiaire : la moins engageante, un simple ajout en attente. */}
         <button
           type="button"
           disabled={!peutAcheter}
           onClick={ajouterAuPanier}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded border border-bordure text-corps font-medium text-texte-secondaire transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
+          className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md text-corps font-medium text-texte-secondaire transition-[background-color,transform] duration-rapide ease-apparition hover:bg-surface-alt active:scale-[0.97] active:bg-surface-alt focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           {ajoute ? (
             <>

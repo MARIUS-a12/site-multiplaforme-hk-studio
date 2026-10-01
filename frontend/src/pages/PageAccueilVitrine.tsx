@@ -6,11 +6,14 @@
  */
 import { useState } from 'react'
 import { Search } from 'lucide-react'
+import { Bouton } from '../components/Bouton'
 import { CarteProduitVitrine } from '../components/CarteProduitVitrine'
+import { EnteteAccueilVitrine } from '../components/EnteteAccueilVitrine'
 import { EtatErreur } from '../components/EtatErreur'
 import { EtatVideVitrine } from '../components/EtatVideVitrine'
 import { SquelettesGrilleVitrine } from '../components/SquelettesGrilleVitrine'
 import { useCategoriesVitrine } from '../hooks/useCategoriesVitrine'
+import { useEtablissementVitrine } from '../hooks/useEtablissementVitrine'
 import { useProduitsVitrine } from '../hooks/useProduitsVitrine'
 import { useValeurDifferee } from '../hooks/useValeurDifferee'
 import { styleEntreeListe } from '../lib/animation'
@@ -20,6 +23,7 @@ export function PageAccueilVitrine() {
   const [categorieId, setCategorieId] = useState<number | null>(null)
   const [page, setPage] = useState(1)
 
+  const { data: etablissement } = useEtablissementVitrine()
   const rechercheDifferee = useValeurDifferee(recherche)
   const { data: categories } = useCategoriesVitrine()
 
@@ -35,8 +39,10 @@ export function PageAccueilVitrine() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
+    <div className="space-y-8">
+      {etablissement && <EnteteAccueilVitrine etablissement={etablissement} />}
+
+      <div className="space-y-4">
         <div className="relative max-w-md">
           <Search
             aria-hidden="true"
@@ -52,7 +58,7 @@ export function PageAccueilVitrine() {
               setRecherche(evenement.target.value)
               setPage(1)
             }}
-            className="h-11 w-full rounded border border-bordure bg-surface pl-10 pr-3 text-corps text-texte transition-colors focus:border-texte focus:outline focus:outline-2 focus:outline-texte focus:outline-offset-1"
+            className="h-12 w-full rounded-md border border-bordure bg-surface pl-10 pr-3 text-corps text-texte transition-colors focus:border-texte focus:outline focus:outline-2 focus:outline-texte focus:outline-offset-1"
           />
         </div>
 
@@ -111,22 +117,17 @@ export function PageAccueilVitrine() {
                 Page {data.meta.current_page} sur {data.meta.last_page}
               </span>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                  className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-                >
+                <Bouton variante="secondaire" taille="petite" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                   Précédent
-                </button>
-                <button
-                  type="button"
+                </Bouton>
+                <Bouton
+                  variante="secondaire"
+                  taille="petite"
                   disabled={page >= data.meta.last_page}
                   onClick={() => setPage((p) => p + 1)}
-                  className="h-11 cursor-pointer rounded border border-bordure px-3 font-medium text-texte transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-texte focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
                 >
                   Suivant
-                </button>
+                </Bouton>
               </div>
             </div>
           )}

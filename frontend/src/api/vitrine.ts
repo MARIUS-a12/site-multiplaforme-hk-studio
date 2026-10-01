@@ -66,11 +66,26 @@ export type CategorieVitrine = {
   nom: string
 }
 
+export type EtatOuvertureVitrine = {
+  ouvert: boolean
+  libelle: string
+}
+
 export type EtablissementVitrine = {
   nom: string
   type: 'boutique' | 'restaurant'
-  logo: string | null
+  description: string | null
+  logo: { petit: FormatPhoto; grand: FormatPhoto } | null
   numero_whatsapp: string | null
+  telephone_fixe: string | null
+  email_contact: string | null
+  adresse: string | null
+  horaires: Record<string, { ouverture: string | null; fermeture: string | null; ferme: boolean }> | null
+  etat_ouverture: EtatOuvertureVitrine | null
+  lien_facebook: string | null
+  lien_instagram: string | null
+  lien_tiktok: string | null
+  lien_site_web: string | null
   couleur_accent: string
 }
 

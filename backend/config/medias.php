@@ -38,4 +38,18 @@ return [
         'grande' => 1200,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Formats du logo d'établissement
+    |--------------------------------------------------------------------------
+    |
+    | Les deux toujours carrées (voir GenerateurVariantesImage, appelé avec
+    | carre: true) : petit pour l'en-tête de la vitrine, grand pour les
+    | affichages plus larges (fiche établissement, pied de page).
+    */
+    'formats_logo' => [
+        'petit' => 64,
+        'grand' => 256,
+    ],
+
 ];

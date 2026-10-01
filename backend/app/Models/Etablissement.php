@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\StatutEtablissement;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -31,16 +32,28 @@ class Etablissement extends Model
     {
         return [
             'statut' => StatutEtablissement::class,
+            'horaires' => 'array',
         ];
     }
 
     protected $fillable = [
         'nom',
+        'description',
         'slug',
         'type',
         'raison_sociale',
         'email',
+        'email_contact',
         'telephone',
+        'telephone_whatsapp',
+        'telephone_fixe',
+        'adresse',
+        'horaires',
+        'lien_facebook',
+        'lien_instagram',
+        'lien_tiktok',
+        'lien_site_web',
+        'logo_media_id',
         'couleur_accent',
         'statut',
         'fuseau_horaire',
@@ -75,6 +88,11 @@ class Etablissement extends Model
     public function medias(): HasMany
     {
         return $this->hasMany(Media::class);
+    }
+
+    public function logoMedia(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'logo_media_id');
     }
 
     public function clients(): HasMany

@@ -17,6 +17,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { useEtablissementVitrine } from '../hooks/useEtablissementVitrine'
 import { couleurTexteSurAccent } from '../lib/couleurAccent'
 import { LienPanier } from './LienPanier'
+import { PiedDePageVitrine } from './PiedDePageVitrine'
 import { TransitionPage } from './TransitionPage'
 
 export function DispositionVitrine() {
@@ -36,17 +37,29 @@ export function DispositionVitrine() {
           {isPending ? (
             <div className="h-5 w-40 animate-pulse rounded bg-surface-alt" />
           ) : (
-            <Link to="/" className="flex min-w-0 items-center gap-2 truncate">
-              {etablissement?.logo && (
-                <img
-                  src={etablissement.logo}
-                  alt=""
-                  className="h-8 w-8 shrink-0 rounded border border-accent object-cover"
-                />
+            <Link
+              to="/"
+              className="flex min-w-0 items-center gap-2 truncate"
+              aria-label={etablissement?.logo ? etablissement.nom : undefined}
+            >
+              {etablissement?.logo ? (
+                <picture>
+                  {etablissement.logo.petit.webp && (
+                    <source srcSet={etablissement.logo.petit.webp} type="image/webp" />
+                  )}
+                  <img
+                    src={etablissement.logo.petit.jpg ?? etablissement.logo.petit.webp ?? undefined}
+                    alt=""
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 shrink-0 rounded border border-accent object-cover"
+                  />
+                </picture>
+              ) : (
+                <span className="truncate text-titre-section font-semibold text-texte">
+                  {etablissement?.nom ?? 'Boutique'}
+                </span>
               )}
-              <span className="truncate text-titre-section font-semibold text-texte">
-                {etablissement?.nom ?? 'Boutique'}
-              </span>
             </Link>
           )}
           <LienPanier />
@@ -58,6 +71,8 @@ export function DispositionVitrine() {
           <Outlet />
         </TransitionPage>
       </main>
+
+      {etablissement && <PiedDePageVitrine etablissement={etablissement} />}
     </div>
   )
 }

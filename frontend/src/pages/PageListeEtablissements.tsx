@@ -4,10 +4,11 @@
  * le nombre d'établissements reste petit, pas besoin d'un aller-retour
  * serveur par frappe.
  */
-import { Plus } from 'lucide-react'
+import { Plus, TriangleAlert } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Etablissement, TypeEtablissement } from '../api/etablissements'
+import { Bouton } from '../components/Bouton'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
 import { GroupeSegmente } from '../components/GroupeSegmente'
@@ -25,6 +26,7 @@ export function PageListeEtablissements() {
   const [type, setType] = useState<TypeEtablissement | ''>('')
   const rechercheDifferee = useValeurDifferee(recherche)
   const { data: etablissements, isPending, isError, error, refetch } = useEtablissements()
+  const navigate = useNavigate()
 
   const filtres = useMemo(() => {
     if (!etablissements) {
@@ -45,14 +47,14 @@ export function PageListeEtablissements() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-titre-page font-semibold text-texte">Établissements</h1>
-        <Link
-          to="/etablissements/nouveau"
-          className="flex h-11 cursor-pointer items-center gap-1.5 rounded bg-primaire px-3 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+        <h1 className="text-titre-page font-bold text-texte">Établissements</h1>
+        <Bouton
+          variante="principal"
+          icone={<Plus aria-hidden="true" size={20} strokeWidth={1.5} />}
+          onClick={() => navigate('/etablissements/nouveau')}
         >
-          <Plus aria-hidden="true" size={20} strokeWidth={1.5} />
           <span className="hidden sm:inline">Nouvel établissement</span>
-        </Link>
+        </Bouton>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -61,7 +63,7 @@ export function PageListeEtablissements() {
           placeholder="Rechercher un établissement…"
           value={recherche}
           onChange={(evenement) => setRecherche(evenement.target.value)}
-          className="h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 sm:max-w-xs"
+          className="h-11 w-full rounded-md border border-bordure bg-surface px-3 text-corps text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 sm:max-w-xs"
         />
         <GroupeSegmente options={OPTIONS_TYPE} valeur={type} onChange={setType} />
       </div>
@@ -71,7 +73,7 @@ export function PageListeEtablissements() {
       {isError && <EtatErreur erreur={error} onReessayer={() => refetch()} />}
 
       {!isPending && !isError && (
-        <ul className="divide-y divide-bordure border border-bordure">
+        <ul className="divide-y divide-bordure overflow-hidden rounded-lg border border-bordure bg-surface">
           {filtres.map((etablissement) => (
             <LigneEtablissement key={etablissement.id} etablissement={etablissement} />
           ))}
@@ -86,38 +88,58 @@ export function PageListeEtablissements() {
   )
 }
 
+const LIBELLES_CHAMPS_MANQUANTS: Record<string, string> = {
+  logo: 'le logo',
+  couleur: 'la couleur',
+  whatsapp: 'le numéro WhatsApp',
+  horaires: 'les horaires',
+}
+
 function LigneEtablissement({ etablissement }: { etablissement: Etablissement }) {
+  const navigate = useNavigate()
   const estActif = etablissement.statut === 'actif'
+  const champsManquants = etablissement.identite_champs_manquants
 
   return (
-    <li>
+    <li className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
       <Link
         to={`/etablissements/${etablissement.id}`}
-        className="flex flex-col gap-2 p-4 transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.98] sm:flex-row sm:items-center sm:justify-between"
+        className="flex-1 transition-colors hover:text-primaire"
       >
-        <div>
-          <span className="text-corps font-semibold text-texte">{etablissement.nom}</span>
-          <span className="ml-2 text-petit text-texte-secondaire">
-            {etablissement.type === 'restaurant' ? 'Restaurant' : 'Boutique'}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-petit text-texte-secondaire">
-          <span>{etablissement.sous_domaine ?? '—'}</span>
-          <span className="tabular-nums">
-            {etablissement.produits_count ?? 0} produit{(etablissement.produits_count ?? 0) === 1 ? '' : 's'}
-          </span>
-          <span className="tabular-nums">
-            {new Date(etablissement.created_at).toLocaleDateString('fr-FR')}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span
-              aria-hidden="true"
-              className={`h-1.5 w-1.5 rounded-full ${estActif ? 'bg-succes' : 'bg-bordure'}`}
-            />
-            {estActif ? 'Actif' : 'Inactif'}
-          </span>
-        </div>
+        <span className="text-corps font-semibold text-texte">{etablissement.nom}</span>
+        <span className="ml-2 text-petit text-texte-secondaire">
+          {etablissement.type === 'restaurant' ? 'Restaurant' : 'Boutique'}
+        </span>
       </Link>
+
+      <div className="flex items-center gap-3 text-petit text-texte-secondaire">
+        <span>{etablissement.sous_domaine ?? '—'}</span>
+        <span className="tabular-nums">
+          {etablissement.produits_count ?? 0} produit{(etablissement.produits_count ?? 0) === 1 ? '' : 's'}
+        </span>
+        <span className="tabular-nums">
+          {new Date(etablissement.created_at).toLocaleDateString('fr-FR')}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden="true"
+            className={`h-1.5 w-1.5 rounded-full ${estActif ? 'bg-succes' : 'bg-bordure'}`}
+          />
+          {estActif ? 'Actif' : 'Inactif'}
+        </span>
+        {champsManquants.length > 0 && (
+          <span
+            title={`Il manque : ${champsManquants.map((c) => LIBELLES_CHAMPS_MANQUANTS[c] ?? c).join(', ')}.`}
+            className="inline-flex items-center gap-1 text-alerte"
+          >
+            <TriangleAlert aria-hidden="true" size={14} strokeWidth={1.5} />
+            Vitrine incomplète
+          </span>
+        )}
+        <Bouton variante="secondaire" taille="petite" onClick={() => navigate(`/etablissements/${etablissement.id}/identite`)}>
+          Modifier l'identité
+        </Bouton>
+      </div>
     </li>
   )
 }

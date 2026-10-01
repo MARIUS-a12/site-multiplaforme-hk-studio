@@ -19,3 +19,9 @@ export function confirmerArchivageProduit(): boolean {
 export function confirmerSuppressionPhoto(): boolean {
   return window.confirm('Cette photo sera définitivement supprimée.\n\nSupprimer cette photo ?')
 }
+
+export function confirmerSuppressionLogo(): boolean {
+  return window.confirm(
+    "Ce logo sera retiré de votre vitrine ; le nom de l'établissement s'affichera à la place.\n\nRetirer le logo ?",
+  )
+}

@@ -24,6 +24,10 @@ class EtablissementDetailResource extends JsonResource
             'telephone' => $this->telephone,
             'couleur_accent' => $this->couleur_accent,
             'created_at' => $this->created_at,
+            // Étape 7 : conditionne, côté interface, la présence du bouton
+            // "Supprimer définitivement" — la vérification qui compte
+            // reste côté serveur (EtablissementController::destroy()).
+            'nombre_commandes' => $this->commandes()->pourTousEtablissements()->count(),
             'domaines' => $this->domaines->map(fn ($domaine) => [
                 'id' => $domaine->id,
                 'hote' => $domaine->hote,

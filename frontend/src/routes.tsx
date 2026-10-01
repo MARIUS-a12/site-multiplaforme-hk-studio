@@ -26,16 +26,20 @@ import { RouteProtegee } from './components/RouteProtegee'
 import { PageAccueilVitrine } from './pages/PageAccueilVitrine'
 import { PageCategories } from './pages/PageCategories'
 import { PageCommander } from './pages/PageCommander'
+import { PageCompte } from './pages/PageCompte'
 import { PageConfirmationCommande } from './pages/PageConfirmationCommande'
 import { PageConnexionUtilisateur } from './pages/PageConnexionUtilisateur'
 import { PageFicheEtablissement } from './pages/PageFicheEtablissement'
 import { PageFicheProduitVitrine } from './pages/PageFicheProduitVitrine'
 import { PageFormulaireEtablissement } from './pages/PageFormulaireEtablissement'
 import { PageFormulaireProduit } from './pages/PageFormulaireProduit'
+import { PageIdentiteEtablissement } from './pages/PageIdentiteEtablissement'
+import { PageIdentiteEtablissementSuperAdmin } from './pages/PageIdentiteEtablissementSuperAdmin'
 import { PageIntrouvableAdmin } from './pages/PageIntrouvableAdmin'
 import { PageIntrouvableVitrine } from './pages/PageIntrouvableVitrine'
 import { PageListeEtablissements } from './pages/PageListeEtablissements'
 import { PageListeProduits } from './pages/PageListeProduits'
+import { PagePaiement } from './pages/PagePaiement'
 import { PagePanier } from './pages/PagePanier'
 
 export const routes = [
@@ -70,12 +74,18 @@ export const routes = [
       { path: '/etablissements', element: <PageListeEtablissements /> },
       { path: '/etablissements/nouveau', element: <PageFormulaireEtablissement /> },
       { path: '/etablissements/:id', element: <PageFicheEtablissement /> },
+      { path: '/etablissements/:id/identite', element: <PageIdentiteEtablissementSuperAdmin /> },
       // Espace commerçant, entièrement sous /admin.
       { path: '/admin', element: <Navigate to="/admin/produits" replace /> },
       { path: '/admin/produits', element: <PageListeProduits /> },
       { path: '/admin/produits/nouveau', element: <PageFormulaireProduit /> },
       { path: '/admin/produits/:id/modifier', element: <PageFormulaireProduit /> },
       { path: '/admin/categories', element: <PageCategories /> },
+      { path: '/admin/identite', element: <PageIdentiteEtablissement /> },
+      // Accessible à tout utilisateur authentifié, super-admin compris —
+      // voir RouteProtegee, qui laisse passer ce chemin précis pour lui.
+      { path: '/admin/compte', element: <PageCompte /> },
+      { path: '/admin/paiement', element: <PagePaiement /> },
       // Attrape-tout du back-office : une URL /admin/* inconnue reste dans
       // le back-office (et exige toujours la session, RouteProtegee
       // s'applique ici comme à toute route de ce groupe) — jamais

@@ -16,11 +16,21 @@
   --font-sans:
     system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
-  --color-surface: #ffffff;
+  /*
+   * Trois niveaux de surface (Étape 7) : le fond de page (surface-alt, gris
+   * doux), les blocs posés dessus (surface, blanc cassé) et les éléments
+   * flottants au-dessus de tout — menus, panneaux (surface-haute, blanc pur,
+   * plus "lumineux" que les blocs, avec une bordure plus marquée). Chaque
+   * niveau se distingue par sa valeur de fond ET sa bordure, jamais par une
+   * ombre seule.
+   */
+  --color-surface: #fbfbfc;
+  --color-surface-haute: #ffffff;
   --color-surface-alt: #eef0f2;
   --color-texte: #000000;
   --color-texte-secondaire: #595f66;
   --color-bordure: #c9cdd2;
+  --color-bordure-forte: #a7adb5;
   --color-primaire: #146c43;
   --color-primaire-fonce: #0f5233;
   --color-danger: #b91c1c;
@@ -42,12 +52,17 @@
   --color-accent-texte: #ffffff;
 
   /*
-   * Seule ombre du projet : réservée à un panneau réellement flottant
-   * au-dessus d'un fond assombri (voir PanneauMessage). Une carte ou un
-   * bouton ne la portent jamais — l'ombre signifie "au-dessus de tout le
-   * reste", pas "ceci est cliquable".
+   * Trois ombres, toutes directionnelles (décalées vers le bas, jamais
+   * diffusées) — jamais de halo centré façon carte générique :
+   * - flottant : un panneau réellement flottant au-dessus d'un fond
+   *   assombri (menu utilisateur, PanneauMessage) — la plus marquée.
+   * - carte : survol d'une carte produit sur grand écran, à peine visible.
+   * - bouton : légère "épaisseur" au repos du bouton principal, qui
+   *   s'aplatit à la pression (voir Bouton.tsx) pour suggérer la matière.
    */
   --shadow-flottant: 0 8px 24px -4px rgb(0 0 0 / 0.18);
+  --shadow-carte: 0 4px 12px -4px rgb(0 0 0 / 0.12);
+  --shadow-bouton: 0 2px 0 0 rgb(0 0 0 / 0.16);
 
   /*
    * Palette des vignettes-initiales (produits sans photo, établissement) :
@@ -65,10 +80,13 @@
    * Échelle typographique fermée : seuls ces quatre niveaux doivent être
    * utilisés dans les composants (avec font-semibold/medium/normal selon le
    * cas). Ne jamais introduire de taille de texte hors de cette liste.
+   * Écart volontairement large entre titre-page et corps (Étape 7) : c'est
+   * ce contraste d'échelle qui crée la hiérarchie et rend une page agréable
+   * à lire, pas une nuance de couleur ou de graisse supplémentaire.
    */
-  --text-titre-page: 1.5rem; /* 24px */
-  --text-titre-page--line-height: 1.3;
-  --text-titre-section: 1.125rem; /* 18px */
+  --text-titre-page: 2rem; /* 32px */
+  --text-titre-page--line-height: 1.2;
+  --text-titre-section: 1.25rem; /* 20px */
   --text-titre-section--line-height: 1.3;
   --text-corps: 0.9375rem; /* 15px */
   --text-corps--line-height: 1.5;

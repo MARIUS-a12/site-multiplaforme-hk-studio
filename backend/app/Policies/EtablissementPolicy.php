@@ -32,4 +32,9 @@ class EtablissementPolicy
     {
         return false;
     }
+
+    public function delete(User $user, Etablissement $etablissement): bool
+    {
+        return false;
+    }
 }

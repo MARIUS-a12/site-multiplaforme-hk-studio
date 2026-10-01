@@ -1,8 +1,13 @@
 /**
- * Écran /etablissements/nouveau — création complète d'un établissement.
- * Le mot de passe généré n'est jamais montré ici : la création réussie
- * redirige vers la fiche, qui le révèle une seule fois (voir
- * PageFicheEtablissement).
+ * Écran /etablissements/nouveau — Temps 1 de la création d'un établissement
+ * (voir Étape 6A ter) : nom, sous-domaine, compte administrateur — la
+ * transaction existante (CreerEtablissement), inchangée. Le reste de
+ * l'identité (logo, couleur, contact, horaires, réseaux) est Temps 2,
+ * juste après : voir PageIdentiteEtablissementSuperAdmin, vers laquelle la
+ * création redirige avec un bouton "Remplir plus tard".
+ *
+ * Le mot de passe généré n'est jamais montré ici : révélé une seule fois sur
+ * l'écran d'identité qui suit immédiatement la création.
  */
 import { useState } from 'react'
 import type { FormEvent } from 'react'
@@ -17,19 +22,7 @@ import { EtatBouton } from '../components/EtatBouton'
 import { GroupeSegmente } from '../components/GroupeSegmente'
 import { allerAuPremierChampEnErreur, extraireErreursChamps } from '../lib/erreursValidation'
 
-const ORDRE_CHAMPS = [
-  'nom',
-  'type',
-  'sous_domaine',
-  'email',
-  'telephone',
-  'couleur_accent',
-  'nom_administrateur',
-  'email_administrateur',
-]
-
-const COULEUR_PAR_DEFAUT = '#146c43'
-const FORMAT_COULEUR_HEX = /^#[0-9a-fA-F]{6}$/
+const ORDRE_CHAMPS = ['nom', 'type', 'sous_domaine', 'nom_administrateur', 'email_administrateur']
 
 const OPTIONS_TYPE: { valeur: TypeEtablissement; libelle: string }[] = [
   { valeur: 'boutique', libelle: 'Boutique' },
@@ -53,9 +46,6 @@ export function PageFormulaireEtablissement() {
   const [type, setType] = useState<TypeEtablissement>('boutique')
   const [sousDomaine, setSousDomaine] = useState('')
   const [sousDomaineTouche, setSousDomaineTouche] = useState(false)
-  const [email, setEmail] = useState('')
-  const [telephone, setTelephone] = useState('')
-  const [couleurAccent, setCouleurAccent] = useState(COULEUR_PAR_DEFAUT)
   const [nomAdministrateur, setNomAdministrateur] = useState('')
   const [emailAdministrateur, setEmailAdministrateur] = useState('')
   const [erreurs, setErreurs] = useState<Record<string, string>>({})
@@ -73,8 +63,8 @@ export function PageFormulaireEtablissement() {
   const creation = useMutation({
     mutationFn: creerEtablissement,
     onSuccess: ({ etablissement, motDePasseGenere }) => {
-      navigate(`/etablissements/${etablissement.id}`, {
-        state: { motDePasseGenere, messageSucces: `« ${etablissement.nom} » a été créé.` },
+      navigate(`/etablissements/${etablissement.id}/identite`, {
+        state: { motDePasseGenere, estPremierRemplissage: true },
       })
     },
     onError: (erreur) => {
@@ -96,9 +86,6 @@ export function PageFormulaireEtablissement() {
       nom,
       type,
       sous_domaine: sousDomaine,
-      email: email || null,
-      telephone: telephone || null,
-      couleur_accent: FORMAT_COULEUR_HEX.test(couleurAccent) ? couleurAccent : null,
       nom_administrateur: nomAdministrateur,
       email_administrateur: emailAdministrateur,
     })
@@ -141,51 +128,10 @@ export function PageFormulaireEtablissement() {
           erreur={erreurs.sous_domaine}
         />
 
-        <h2 className="text-titre-section font-semibold text-texte">Contact de l'établissement</h2>
-
-        <ChampTexte id="email" label="Email (optionnel)" valeur={email} onChange={setEmail} erreur={erreurs.email} />
-        <ChampTexte
-          id="telephone"
-          label="Téléphone (optionnel)"
-          valeur={telephone}
-          onChange={setTelephone}
-          erreur={erreurs.telephone}
-        />
-
-        <h2 className="text-titre-section font-semibold text-texte">Vitrine</h2>
-
-        <div>
-          <label htmlFor="couleur_accent" className="mb-1 block text-petit font-medium text-texte">
-            Couleur de la vitrine
-          </label>
-          <p className="mb-1.5 text-petit text-texte-secondaire">
-            Utilisée sur le bouton principal et le logo de la boutique en ligne de ce commerçant.
-          </p>
-          <div className="flex items-center gap-2">
-            <input
-              id="couleur_accent"
-              type="color"
-              value={FORMAT_COULEUR_HEX.test(couleurAccent) ? couleurAccent : COULEUR_PAR_DEFAUT}
-              onChange={(evenement) => setCouleurAccent(evenement.target.value)}
-              aria-label="Choisir la couleur de la vitrine"
-              className="h-11 w-11 shrink-0 cursor-pointer rounded border border-bordure bg-surface p-1"
-            />
-            <input
-              type="text"
-              value={couleurAccent}
-              onChange={(evenement) => setCouleurAccent(evenement.target.value)}
-              placeholder={COULEUR_PAR_DEFAUT}
-              className="h-11 w-32 rounded border border-bordure bg-surface px-3 text-corps uppercase tabular-nums text-texte transition-colors focus:border-primaire focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1"
-            />
-          </div>
-          {erreurs.couleur_accent && (
-            <p className="animate-entree-champ mt-1 text-petit text-danger">{erreurs.couleur_accent}</p>
-          )}
-        </div>
-
         <h2 className="text-titre-section font-semibold text-texte">Compte administrateur</h2>
         <p className="text-petit text-texte-secondaire">
-          Un mot de passe sera généré automatiquement et affiché une seule fois après la création.
+          Un mot de passe sera généré automatiquement et affiché une seule fois après la création. Le reste de
+          l'identité (logo, couleur, contact, horaires) se renseigne à l'étape suivante.
         </p>
 
         <ChampTexte
@@ -211,7 +157,7 @@ export function PageFormulaireEtablissement() {
             disabled={creation.isPending}
             className="h-11 flex-1 cursor-pointer rounded bg-primaire text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
           >
-            <EtatBouton chargement={creation.isPending}>Créer l'établissement</EtatBouton>
+            <EtatBouton chargement={creation.isPending}>Continuer vers l'identité</EtatBouton>
           </button>
         </div>
       </form>

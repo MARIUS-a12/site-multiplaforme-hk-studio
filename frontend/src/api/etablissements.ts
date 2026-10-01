@@ -15,6 +15,9 @@ export type Etablissement = {
   statut: string
   produits_count?: number
   created_at: string
+  // Étape 6A ter : 'logo' | 'couleur' | 'whatsapp' | 'horaires', vide quand
+  // l'identité est complète — voir la pastille "Vitrine incomplète".
+  identite_champs_manquants: string[]
 }
 
 export type Domaine = {
@@ -43,15 +46,15 @@ export type EtablissementDetail = {
   created_at: string
   domaines: Domaine[]
   utilisateurs: UtilisateurRattache[]
+  // Étape 7 : conditionne la présence du bouton "Supprimer définitivement" —
+  // la vérification qui compte reste côté serveur.
+  nombre_commandes: number
 }
 
 export type NouvelEtablissementPayload = {
   nom: string
   type: TypeEtablissement
   sous_domaine: string
-  email: string | null
-  telephone: string | null
-  couleur_accent: string | null
   nom_administrateur: string
   email_administrateur: string
 }
@@ -98,6 +101,15 @@ export async function reactiverEtablissement(id: number): Promise<EtablissementD
   const { data } = await client.post<{ data: EtablissementDetail }>(`/api/etablissements/${id}/reactiver`)
 
   return data.data
+}
+
+/**
+ * Destruction définitive et irréversible — voir SupprimerEtablissement côté
+ * backend. nom_confirmation doit être le nom EXACT de l'établissement : la
+ * vérification est refaite côté serveur, jamais seulement côté interface.
+ */
+export async function supprimerEtablissement(id: number, nomConfirmation: string): Promise<void> {
+  await client.delete(`/api/etablissements/${id}`, { data: { nom_confirmation: nomConfirmation } })
 }
 
 export async function verifierDisponibiliteSousDomaine(valeur: string): Promise<boolean> {

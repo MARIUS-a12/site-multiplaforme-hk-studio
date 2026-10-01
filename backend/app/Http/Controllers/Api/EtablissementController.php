@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\StatutEtablissement;
+use App\Exceptions\EtablissementAvecCommandesException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEtablissementRequest;
+use App\Http\Requests\SupprimerEtablissementRequest;
 use App\Http\Resources\EtablissementDetailResource;
 use App\Http\Resources\EtablissementResource;
 use App\Models\Domaine;
 use App\Models\Etablissement;
 use App\Services\Etablissements\CreerEtablissement;
+use App\Services\Etablissements\SupprimerEtablissement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -93,6 +96,28 @@ class EtablissementController extends Controller
         $etablissement->update(['statut' => StatutEtablissement::Actif]);
 
         return new EtablissementDetailResource($etablissement->load(['domaines', 'appartenances.utilisateur', 'appartenances.role']));
+    }
+
+    /**
+     * Destruction définitive — voir SupprimerEtablissement. Bloquée (422)
+     * tant qu'il reste la moindre commande ; le bouton correspondant est de
+     * toute façon absent côté interface dans ce cas, cette vérification est
+     * la véritable barrière, pas un simple confort d'affichage.
+     */
+    public function destroy(SupprimerEtablissementRequest $request, Etablissement $etablissement, SupprimerEtablissement $supprimerEtablissement): JsonResponse
+    {
+        Gate::authorize('delete', $etablissement);
+
+        try {
+            $supprimerEtablissement->executer($etablissement);
+        } catch (EtablissementAvecCommandesException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'nombre_commandes' => $exception->nombreCommandes,
+            ], 422);
+        }
+
+        return response()->json(null, 204);
     }
 
     /**

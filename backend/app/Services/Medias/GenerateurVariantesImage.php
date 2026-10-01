@@ -30,9 +30,16 @@ class GenerateurVariantesImage
     }
 
     /**
+     * $formats : par défaut config('medias.formats') (produits — seule
+     * "vignette" est carrée). $carre force TOUS les formats passés à être
+     * carrés (recadrés) — utilisé pour le logo d'établissement
+     * (config('medias.formats_logo')), où les deux tailles doivent l'être,
+     * voir MettreAJourLogoEtablissement.
+     *
+     * @param  array<string, int>|null  $formats
      * @return array<string, array{webp: string, jpg: string, largeur: int, hauteur: int, taille_webp: int, taille_jpg: int}>
      */
-    public function generer(UploadedFile $fichier, string $disque): array
+    public function generer(UploadedFile $fichier, string $disque, ?array $formats = null, bool $carre = false): array
     {
         $image = $this->manager->read($fichier->getRealPath());
         $identifiant = (string) Str::uuid();
@@ -41,8 +48,8 @@ class GenerateurVariantesImage
 
         $variantes = [];
 
-        foreach (config('medias.formats') as $nom => $dimension) {
-            $redimensionnee = $nom === 'vignette'
+        foreach ($formats ?? config('medias.formats') as $nom => $dimension) {
+            $redimensionnee = $carre || $nom === 'vignette'
                 ? (clone $image)->cover($dimension, $dimension)
                 : (clone $image)->scaleDown(width: $dimension);
 

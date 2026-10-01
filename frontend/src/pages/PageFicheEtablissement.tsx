@@ -1,20 +1,22 @@
 /**
  * Écran /etablissements/{id} — informations, domaines, utilisateurs
- * rattachés, et suspension/réactivation. Révèle aussi, une seule fois, le
- * mot de passe généré si on y arrive juste après une création (voir
- * PageFormulaireEtablissement) — jamais récupérable après ce premier
- * affichage.
+ * rattachés, suspension/réactivation et suppression définitive (Étape 7).
+ * Révèle aussi, une seule fois, le mot de passe généré si on y arrive juste
+ * après une création (voir PageFormulaireEtablissement) — jamais
+ * récupérable après ce premier affichage.
  */
+import axios from 'axios'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { reactiverEtablissement, suspendreEtablissement } from '../api/etablissements'
+import { reactiverEtablissement, supprimerEtablissement, suspendreEtablissement } from '../api/etablissements'
 import { BandeauMotDePasseGenere } from '../components/BandeauMotDePasseGenere'
 import { BandeauSucces } from '../components/BandeauSucces'
+import { Bouton } from '../components/Bouton'
 import { BoutonRetour } from '../components/BoutonRetour'
-import { EtatBouton } from '../components/EtatBouton'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
+import { PanneauSuppressionEtablissement } from '../components/PanneauSuppressionEtablissement'
 import { useEtablissement } from '../hooks/useEtablissement'
 
 export function PageFicheEtablissement() {
@@ -66,6 +68,32 @@ export function PageFicheEtablissement() {
     }
   }
 
+  const [panneauSuppressionOuvert, setPanneauSuppressionOuvert] = useState(false)
+  const [erreurSuppression, setErreurSuppression] = useState<string | null>(null)
+
+  const suppression = useMutation({
+    mutationFn: (saisie: string) => supprimerEtablissement(etablissementId, saisie),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['etablissements'] })
+      navigate('/etablissements', { replace: true, state: { messageSucces: `${etablissement?.nom} a été supprimé.` } })
+    },
+    onError: (erreur) => {
+      if (axios.isAxiosError(erreur) && erreur.response?.status === 422) {
+        const messageApi = erreur.response.data?.message
+        setErreurSuppression(
+          typeof messageApi === 'string' ? messageApi : 'Le nom saisi ne correspond pas.',
+        )
+        return
+      }
+      setErreurSuppression('Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.')
+    },
+  })
+
+  function ouvrirPanneauSuppression() {
+    setErreurSuppression(null)
+    setPanneauSuppressionOuvert(true)
+  }
+
   if (isPending) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -100,8 +128,8 @@ export function PageFicheEtablissement() {
         <BandeauSucces message={messageSucces} onFermer={fermerBandeaux} />
       )}
 
-      <section className="border border-bordure">
-        <h2 className="border-b border-bordure bg-surface-alt px-4 py-2 text-titre-section font-semibold text-texte">
+      <section className="rounded-lg border border-bordure bg-surface">
+        <h2 className="border-b border-bordure px-4 py-2 text-titre-section font-semibold text-texte">
           Informations
         </h2>
         <dl className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
@@ -124,8 +152,8 @@ export function PageFicheEtablissement() {
         </dl>
       </section>
 
-      <section className="border border-bordure">
-        <h2 className="border-b border-bordure bg-surface-alt px-4 py-2 text-titre-section font-semibold text-texte">
+      <section className="rounded-lg border border-bordure bg-surface">
+        <h2 className="border-b border-bordure px-4 py-2 text-titre-section font-semibold text-texte">
           Domaines
         </h2>
         <ul className="divide-y divide-bordure">
@@ -140,8 +168,8 @@ export function PageFicheEtablissement() {
         </ul>
       </section>
 
-      <section className="border border-bordure">
-        <h2 className="border-b border-bordure bg-surface-alt px-4 py-2 text-titre-section font-semibold text-texte">
+      <section className="rounded-lg border border-bordure bg-surface">
+        <h2 className="border-b border-bordure px-4 py-2 text-titre-section font-semibold text-texte">
           Utilisateurs rattachés
         </h2>
         <ul className="divide-y divide-bordure">
@@ -163,27 +191,55 @@ export function PageFicheEtablissement() {
         </ul>
       </section>
 
-      <div>
+      <div className="flex flex-wrap gap-3">
+        <Bouton variante="secondaire" onClick={() => navigate(`/etablissements/${etablissementId}/identite`)}>
+          Modifier l'identité
+        </Bouton>
         {estActif ? (
-          <button
-            type="button"
-            onClick={demanderSuspension}
-            disabled={suspension.isPending}
-            className="h-11 cursor-pointer rounded border border-danger px-4 text-corps font-medium text-danger transition-[background-color,transform] hover:bg-danger/10 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
-          >
-            <EtatBouton chargement={suspension.isPending}>Suspendre cet établissement</EtatBouton>
-          </button>
+          <Bouton variante="danger" onClick={demanderSuspension} chargement={suspension.isPending}>
+            Suspendre cet établissement
+          </Bouton>
         ) : (
-          <button
-            type="button"
-            onClick={() => reactivation.mutate()}
-            disabled={reactivation.isPending}
-            className="h-11 cursor-pointer rounded bg-primaire px-4 text-corps font-medium text-surface transition-[background-color,transform] hover:bg-primaire-fonce active:scale-[0.97] active:bg-primaire-fonce focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
-          >
-            <EtatBouton chargement={reactivation.isPending}>Réactiver cet établissement</EtatBouton>
-          </button>
+          <Bouton variante="principal" onClick={() => reactivation.mutate()} chargement={reactivation.isPending}>
+            Réactiver cet établissement
+          </Bouton>
         )}
       </div>
+
+      <section className="rounded-lg border border-bordure-forte bg-surface">
+        <h2 className="border-b border-bordure px-4 py-2 text-titre-section font-semibold text-texte">
+          Zone de suppression
+        </h2>
+        <div className="p-4">
+          {etablissement.nombre_commandes > 0 ? (
+            <p className="text-corps text-texte-secondaire">
+              On ne détruit jamais un historique de ventes : cet établissement a{' '}
+              {etablissement.nombre_commandes === 1 ? '1 commande' : `${etablissement.nombre_commandes} commandes`}{' '}
+              et ne peut pas être supprimé définitivement. Suspendez-le si besoin.
+            </p>
+          ) : (
+            <>
+              <p className="text-corps text-texte-secondaire">
+                Aucune commande n'existe pour cet établissement : il peut être supprimé définitivement. Cette
+                action est irréversible.
+              </p>
+              <Bouton variante="danger" className="mt-3" onClick={ouvrirPanneauSuppression}>
+                Supprimer définitivement
+              </Bouton>
+            </>
+          )}
+        </div>
+      </section>
+
+      {panneauSuppressionOuvert && (
+        <PanneauSuppressionEtablissement
+          nomEtablissement={etablissement.nom}
+          enCours={suppression.isPending}
+          erreur={erreurSuppression}
+          onConfirmer={(saisie) => suppression.mutate(saisie)}
+          onFermer={() => setPanneauSuppressionOuvert(false)}
+        />
+      )}
     </div>
   )
 }

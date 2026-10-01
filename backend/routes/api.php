@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\CategorieController;
 use App\Http\Controllers\Api\CommandeController;
+use App\Http\Controllers\Api\CompteController;
 use App\Http\Controllers\Api\EtablissementController;
+use App\Http\Controllers\Api\IdentiteEtablissementController;
 use App\Http\Controllers\Api\MediaProduitController;
 use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
@@ -48,6 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/deconnexion', [SessionController::class, 'destroy']);
     Route::get('/moi', [SessionController::class, 'moi'])->middleware('resoudre.etablissement');
 
+    // "Mon compte" — Étape 7 : accessible à tout utilisateur authentifié,
+    // super-admin compris, donc volontairement hors de "resoudre.etablissement".
+    Route::patch('/compte/mot-de-passe', [CompteController::class, 'mettreAJourMotDePasse'])->middleware('throttle:5,60');
+    Route::patch('/compte/profil', [CompteController::class, 'mettreAJourProfil']);
+
     // Pas de "resoudre.etablissement" ici : réservées au super-admin (voir
     // EtablissementPolicy), qui n'a justement pas d'établissement courant.
     // "sous-domaine-disponible" avant "{etablissement}" : sinon ce dernier
@@ -58,6 +65,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/etablissements/{etablissement}', [EtablissementController::class, 'show']);
     Route::post('/etablissements/{etablissement}/suspendre', [EtablissementController::class, 'suspendre']);
     Route::post('/etablissements/{etablissement}/reactiver', [EtablissementController::class, 'reactiver']);
+    Route::delete('/etablissements/{etablissement}', [EtablissementController::class, 'destroy']);
+
+    // Étape 6A ter — identité (chemin super-admin, n'importe quel
+    // établissement) : MÊME contrôleur, MÊME service que le chemin
+    // commerçant ci-dessous, voir IdentiteEtablissementController.
+    Route::get('/etablissements/{etablissement}/identite', [IdentiteEtablissementController::class, 'show']);
+    Route::patch('/etablissements/{etablissement}/identite', [IdentiteEtablissementController::class, 'update']);
+    Route::post('/etablissements/{etablissement}/identite/logo', [IdentiteEtablissementController::class, 'uploaderLogo']);
+    Route::delete('/etablissements/{etablissement}/identite/logo', [IdentiteEtablissementController::class, 'supprimerLogo']);
 
     Route::middleware('resoudre.etablissement')->group(function () {
         Route::get('/produits', [ProduitController::class, 'index']);
@@ -78,6 +94,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/commandes', [CommandeController::class, 'index']);
 
         Route::get('/parametres', [ParametresController::class, 'index']);
+
+        // Étape 6A ter — identité (chemin commerçant, son propre
+        // établissement, résolu par le sous-domaine) : pas de paramètre de
+        // route, voir IdentiteEtablissementController::resoudreCible().
+        Route::get('/parametres/etablissement', [IdentiteEtablissementController::class, 'show']);
+        Route::patch('/parametres/etablissement', [IdentiteEtablissementController::class, 'update']);
+        Route::post('/parametres/etablissement/logo', [IdentiteEtablissementController::class, 'uploaderLogo']);
+        Route::delete('/parametres/etablissement/logo', [IdentiteEtablissementController::class, 'supprimerLogo']);
+
         Route::get('/statistiques', [StatistiquesController::class, 'index']);
     });
 });
