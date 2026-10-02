@@ -2,21 +2,183 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\StatutCommande;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AnnulerCommandeRequest;
+use App\Http\Resources\CommandeResource;
 use App\Models\Commande;
+use App\Services\Commandes\AnnulerCommande;
+use App\Services\Commandes\TransitionnerStatutCommande;
+use App\Services\Stock\ConsommerReservation;
+use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Stub minimal, voir ProduitController : cette étape porte sur les
- * permissions, pas sur le CRUD commandes.
+ * Étape 9 — gestion des commandes du back-office. Entièrement bâti sur le
+ * noyau de l'Étape 6B (CreerCommande, ConsommerReservation, AnnulerCommande,
+ * TransitionnerStatutCommande) : ce contrôleur ne fait QUE résoudre la
+ * commande, vérifier la transition demandée, et déléguer — aucune logique de
+ * stock ni d'historique ne vit ici.
+ *
+ * "Confirmer"/"Annuler" ont des effets de stock, donc leurs propres
+ * services dédiés (ConsommerReservation, AnnulerCommande). "Marquer prête"
+ * et "Marquer livrée" n'en ont aucun, d'où TransitionnerStatutCommande,
+ * générique aux deux.
  */
 class CommandeController extends Controller
 {
-    public function index(): JsonResponse
+    public function __construct(
+        private readonly ConsommerReservation $consommerReservation,
+        private readonly TransitionnerStatutCommande $transitionnerStatut,
+        private readonly AnnulerCommande $annulerCommande,
+    ) {}
+
+    public function index(Request $request): AnonymousResourceCollection
     {
         Gate::authorize('viewAny', Commande::class);
 
-        return response()->json(['data' => []]);
+        $requete = Commande::query()->with(['client', 'lignes'])->latest('created_at');
+
+        $recherche = trim((string) $request->query('recherche', ''));
+        if ($recherche !== '') {
+            $requete->where(function ($sousRequete) use ($recherche) {
+                $sousRequete->where('numero', 'like', "%{$recherche}%")
+                    ->orWhereHas('client', fn ($q) => $q->where('telephone', 'like', "%{$recherche}%"));
+            });
+        }
+
+        $statut = $request->query('statut');
+        if (is_string($statut) && $statut !== '' && StatutCommande::tryFrom($statut) !== null) {
+            $requete->where('statut', $statut);
+        }
+
+        return CommandeResource::collection($requete->paginate(25)->withQueryString());
+    }
+
+    /**
+     * Avant "{commande}" dans routes/api.php : sinon "statistiques" serait
+     * capturé comme un identifiant de commande (même précaution que
+     * "sous-domaine-disponible" avant "{etablissement}").
+     */
+    public function statistiques(): JsonResponse
+    {
+        Gate::authorize('viewAny', Commande::class);
+
+        $etablissement = app(ContexteEtablissement::class)->obtenir();
+        $statutsConfirmes = [StatutCommande::Payee->value, StatutCommande::Prete->value, StatutCommande::Livree->value];
+
+        $commandesDuJour = $etablissement->commandes()->whereDate('created_at', today())->count();
+
+        $enAttente = $etablissement->commandes()->where('statut', StatutCommande::AttentePaiement->value)->count();
+
+        $chiffreAffairesJour = (int) $etablissement->commandes()
+            ->whereDate('created_at', today())
+            ->whereIn('statut', $statutsConfirmes)
+            ->sum('total');
+
+        $commandesDuMois = $etablissement->commandes()
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->whereIn('statut', $statutsConfirmes);
+
+        $panierMoyenMois = (int) round((clone $commandesDuMois)->avg('total') ?? 0);
+
+        return response()->json([
+            'commandes_du_jour' => $commandesDuJour,
+            'en_attente' => $enAttente,
+            'chiffre_affaires_jour' => $chiffreAffairesJour,
+            'panier_moyen_mois' => $panierMoyenMois,
+        ]);
+    }
+
+    public function show(Commande $commande): CommandeResource
+    {
+        Gate::authorize('view', $commande);
+
+        $commande->load([
+            'client',
+            'zoneLivraison',
+            'lignes.variante',
+            'lignes.produit.medias' => fn ($requete) => $requete->orderByPivot('ordre'),
+            'historique' => fn ($requete) => $requete->orderBy('id'),
+            'historique.utilisateur',
+        ]);
+
+        return new CommandeResource($commande);
+    }
+
+    public function confirmer(Commande $commande): JsonResponse
+    {
+        Gate::authorize('update', $commande);
+
+        if ($commande->statut !== StatutCommande::AttentePaiement) {
+            return $this->reponseTransitionRefusee($commande, 'confirmée');
+        }
+
+        $this->consommerReservation->executer($commande);
+
+        return $this->reponseCommandeFraiche($commande);
+    }
+
+    public function marquerPrete(Commande $commande): JsonResponse
+    {
+        return $this->transitionnerSimple($commande, StatutCommande::Payee, StatutCommande::Prete, 'marquée prête');
+    }
+
+    public function marquerLivree(Commande $commande): JsonResponse
+    {
+        return $this->transitionnerSimple($commande, StatutCommande::Prete, StatutCommande::Livree, 'marquée livrée');
+    }
+
+    private function transitionnerSimple(Commande $commande, StatutCommande $attendu, StatutCommande $cible, string $libelleAction): JsonResponse
+    {
+        Gate::authorize('update', $commande);
+
+        if ($commande->statut !== $attendu) {
+            return $this->reponseTransitionRefusee($commande, $libelleAction);
+        }
+
+        $this->transitionnerStatut->executer($commande, $attendu, $cible, auth()->id());
+
+        return $this->reponseCommandeFraiche($commande);
+    }
+
+    public function annuler(AnnulerCommandeRequest $request, Commande $commande): JsonResponse
+    {
+        Gate::authorize('update', $commande);
+
+        $statutsAnnulables = [StatutCommande::AttentePaiement, StatutCommande::Payee, StatutCommande::Prete];
+
+        if (! in_array($commande->statut, $statutsAnnulables, true)) {
+            return $this->reponseTransitionRefusee($commande, 'annulée');
+        }
+
+        $this->annulerCommande->executer($commande, $request->motifFinal(), auth()->id());
+
+        return $this->reponseCommandeFraiche($commande);
+    }
+
+    private function reponseTransitionRefusee(Commande $commande, string $libelleAction): JsonResponse
+    {
+        return response()->json([
+            'message' => "Cette commande est actuellement « {$commande->statut->libelle()} », elle ne peut pas être {$libelleAction}.",
+        ], 422);
+    }
+
+    private function reponseCommandeFraiche(Commande $commande): JsonResponse
+    {
+        $fraiche = $commande->fresh([
+            'client',
+            'zoneLivraison',
+            'lignes.variante',
+            'lignes.produit.medias' => fn ($requete) => $requete->orderByPivot('ordre'),
+            'historique' => fn ($requete) => $requete->orderBy('id'),
+            'historique.utilisateur',
+        ]);
+
+        return (new CommandeResource($fraiche))->response();
     }
 }

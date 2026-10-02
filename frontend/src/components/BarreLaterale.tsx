@@ -4,17 +4,20 @@
  * coulissant (translate-x, 200ms) ouvert par le bouton de BarreSuperieure,
  * avec un fond assombri derrière — fermeture au clic extérieur, à Échap, et
  * après sélection d'une entrée (voir onFermerMobile). N'affiche QUE les
- * pages qui existent réellement : Produits et Catégories aujourd'hui,
- * jamais une entrée morte pour une page absente (Commandes, Clients...).
+ * pages qui existent réellement : Produits, Commandes et Catégories
+ * aujourd'hui, jamais une entrée morte pour une page absente (Clients,
+ * Stock, Rapports...).
  *
- * La carte de statut en bas reflète l'état RÉEL de l'établissement
- * (moi.etablissement.statut, voir SessionController::reponseMoi côté API) —
- * jamais une valeur codée en dur.
+ * La pastille de Commandes (nombre en attente de traitement) et la carte de
+ * statut en bas sont toutes deux RÉELLES — respectivement
+ * useStatistiquesCommandes (Étape 9) et moi.etablissement.statut (voir
+ * SessionController::reponseMoi côté API) — jamais une valeur codée en dur.
  */
-import { FolderTree, Package, Store } from 'lucide-react'
+import { FolderTree, Package, ShoppingCart, Store } from 'lucide-react'
 import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import type { Moi } from '../api/auth'
+import { useStatistiquesCommandes } from '../hooks/useStatistiquesCommandes'
 
 const LIBELLES_ESPACE: Record<string, string> = {
   admin_etablissement: 'Espace Administrateur',
@@ -23,6 +26,7 @@ const LIBELLES_ESPACE: Record<string, string> = {
 
 const ENTREES = [
   { vers: '/admin/produits', libelle: 'Produits', icone: Package, permissions: ['voir_catalogue', 'gerer_catalogue'] },
+  { vers: '/admin/commandes', libelle: 'Commandes', icone: ShoppingCart, permissions: ['voir_commandes', 'gerer_commandes'] },
   { vers: '/admin/categories', libelle: 'Catégories', icone: FolderTree, permissions: ['voir_catalogue', 'gerer_catalogue'] },
 ]
 
@@ -35,6 +39,9 @@ export function BarreLaterale({
   ouvertMobile: boolean
   onFermerMobile: () => void
 }) {
+  const peutVoirCommandes = moi.permissions.includes('voir_commandes') || moi.permissions.includes('gerer_commandes')
+  const { data: statistiquesCommandes } = useStatistiquesCommandes(peutVoirCommandes)
+
   useEffect(() => {
     if (!ouvertMobile) {
       return
@@ -80,21 +87,30 @@ export function BarreLaterale({
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {ENTREES.filter((entree) => entree.permissions.some((permission) => moi.permissions.includes(permission))).map(
-            (entree) => (
-              <NavLink
-                key={entree.vers}
-                to={entree.vers}
-                onClick={onFermerMobile}
-                className={({ isActive }) =>
-                  `flex h-11 items-center gap-3 rounded-lg px-3 text-corps font-medium transition-colors ${
-                    isActive ? 'bg-orange text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  }`
-                }
-              >
-                <entree.icone aria-hidden="true" size={20} strokeWidth={1.75} />
-                {entree.libelle}
-              </NavLink>
-            ),
+            (entree) => {
+              const pastille = entree.vers === '/admin/commandes' ? statistiquesCommandes?.en_attente : undefined
+
+              return (
+                <NavLink
+                  key={entree.vers}
+                  to={entree.vers}
+                  onClick={onFermerMobile}
+                  className={({ isActive }) =>
+                    `flex h-11 items-center gap-3 rounded-lg px-3 text-corps font-medium transition-colors ${
+                      isActive ? 'bg-orange text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
+                >
+                  <entree.icone aria-hidden="true" size={20} strokeWidth={1.75} />
+                  <span className="flex-1">{entree.libelle}</span>
+                  {!!pastille && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-semibold tabular-nums text-white">
+                      {pastille}
+                    </span>
+                  )}
+                </NavLink>
+              )
+            },
           )}
         </nav>
 

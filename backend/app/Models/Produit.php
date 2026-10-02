@@ -210,4 +210,17 @@ class Produit extends Model
             'quantite_reservee' => DB::raw("quantite_reservee - {$quantite}"),
         ]);
     }
+
+    /**
+     * L'inverse exact de consommerAtomiquement() : une commande déjà
+     * confirmée (stock physique déjà décrémenté, réservation déjà
+     * "consommee") qu'on annule doit le redonner — voir
+     * App\Services\Stock\RestaurerReservation (Étape 9). quantite_reservee
+     * ne bouge pas : elle a déjà été décrémentée au moment de la
+     * consommation, cette réservation ne compte plus contre le disponible.
+     */
+    public static function restaurerAtomiquement(int $produitId, int $quantite): void
+    {
+        static::pourTousEtablissements()->whereKey($produitId)->increment('quantite_stock', $quantite);
+    }
 }

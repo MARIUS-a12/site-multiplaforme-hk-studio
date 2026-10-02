@@ -131,4 +131,13 @@ class VarianteProduit extends Model
             'quantite_reservee' => DB::raw("quantite_reservee - {$quantite}"),
         ]);
     }
+
+    /**
+     * Voir Produit::restaurerAtomiquement() — même logique, même raison
+     * d'être (Étape 9).
+     */
+    public static function restaurerAtomiquement(int $varianteId, int $quantite): void
+    {
+        static::pourTousEtablissements()->whereKey($varianteId)->increment('quantite_stock', $quantite);
+    }
 }

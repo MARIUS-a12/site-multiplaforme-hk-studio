@@ -29,6 +29,7 @@ import { PageCommander } from './pages/PageCommander'
 import { PageCompte } from './pages/PageCompte'
 import { PageConfirmationCommande } from './pages/PageConfirmationCommande'
 import { PageConnexionUtilisateur } from './pages/PageConnexionUtilisateur'
+import { PageDetailCommande } from './pages/PageDetailCommande'
 import { PageFicheEtablissement } from './pages/PageFicheEtablissement'
 import { PageFicheProduitVitrine } from './pages/PageFicheProduitVitrine'
 import { PageFormulaireEtablissement } from './pages/PageFormulaireEtablissement'
@@ -37,6 +38,7 @@ import { PageIdentiteEtablissement } from './pages/PageIdentiteEtablissement'
 import { PageIdentiteEtablissementSuperAdmin } from './pages/PageIdentiteEtablissementSuperAdmin'
 import { PageIntrouvableAdmin } from './pages/PageIntrouvableAdmin'
 import { PageIntrouvableVitrine } from './pages/PageIntrouvableVitrine'
+import { PageListeCommandes } from './pages/PageListeCommandes'
 import { PageListeEtablissements } from './pages/PageListeEtablissements'
 import { PageListeProduits } from './pages/PageListeProduits'
 import { PagePaiement } from './pages/PagePaiement'
@@ -83,6 +85,8 @@ export const routes = [
       { path: '/admin/produits/nouveau', element: <PageFormulaireProduit /> },
       { path: '/admin/produits/:id/modifier', element: <PageFormulaireProduit /> },
       { path: '/admin/categories', element: <PageCategories /> },
+      { path: '/admin/commandes', element: <PageListeCommandes /> },
+      { path: '/admin/commandes/:id', element: <PageDetailCommande /> },
       { path: '/admin/identite', element: <PageIdentiteEtablissement /> },
       // Accessible à tout utilisateur authentifié, super-admin compris —
       // voir RouteProtegee, qui laisse passer ce chemin précis pour lui.

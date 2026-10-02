@@ -99,7 +99,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/categories/{categorie}', [CategorieController::class, 'update']);
         Route::delete('/categories/{categorie}', [CategorieController::class, 'destroy']);
 
+        // Étape 9 — "statistiques" avant "{commande}" : sinon ce dernier
+        // capturerait le chemin littéral comme un identifiant de commande
+        // (même précaution que "sous-domaine-disponible" plus haut).
         Route::get('/commandes', [CommandeController::class, 'index']);
+        Route::get('/commandes/statistiques', [CommandeController::class, 'statistiques']);
+        Route::get('/commandes/{commande}', [CommandeController::class, 'show']);
+        Route::patch('/commandes/{commande}/confirmer', [CommandeController::class, 'confirmer']);
+        Route::patch('/commandes/{commande}/marquer-prete', [CommandeController::class, 'marquerPrete']);
+        Route::patch('/commandes/{commande}/marquer-livree', [CommandeController::class, 'marquerLivree']);
+        Route::post('/commandes/{commande}/annuler', [CommandeController::class, 'annuler']);
 
         Route::get('/parametres', [ParametresController::class, 'index']);
 
