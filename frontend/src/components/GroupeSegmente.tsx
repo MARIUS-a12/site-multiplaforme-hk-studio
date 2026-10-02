@@ -27,7 +27,7 @@ export function GroupeSegmente<T extends string>({
             index > 0 ? 'border-l border-bordure' : ''
           } ${
             valeur === option.valeur
-              ? 'bg-primaire text-surface'
+              ? 'bg-marine text-white'
               : 'bg-surface text-texte hover:bg-surface-alt'
           }`}
         >

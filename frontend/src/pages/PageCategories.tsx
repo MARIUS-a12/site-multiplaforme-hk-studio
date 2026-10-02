@@ -6,14 +6,14 @@
  * formulaire produit. Création et actions absentes pour qui n'a pas
  * gerer_catalogue — un opérateur ne fait que consulter.
  */
-import { Archive, ArchiveRestore } from 'lucide-react'
+import { Archive, ArchiveRestore, FolderTree } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { Categorie } from '../api/categories'
 import { archiverCategorie, creerCategorie, reactiverCategorie } from '../api/categories'
 import { BandeauSucces } from '../components/BandeauSucces'
-import { BoutonRetour } from '../components/BoutonRetour'
+import { EnteteDePage } from '../components/EnteteDePage'
 import { EtatBouton } from '../components/EtatBouton'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
@@ -88,10 +88,12 @@ export function PageCategories() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center gap-2">
-        <BoutonRetour />
-        <h1 className="text-titre-page font-semibold text-texte">Catégories</h1>
-      </div>
+      <EnteteDePage
+        icone={<FolderTree aria-hidden="true" size={22} strokeWidth={1.75} />}
+        couleur="violet"
+        titre="Catégories"
+        sousTitre="Organisez votre catalogue pour que vos clients s'y retrouvent."
+      />
 
       {messageSucces && <BandeauSucces message={messageSucces} onFermer={() => setMessageSucces(null)} />}
 

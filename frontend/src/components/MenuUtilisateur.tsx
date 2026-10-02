@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import type { Moi } from '../api/auth'
 import { deconnecter } from '../api/auth'
+import { CarreInitiale } from './CarreInitiale'
 import { CLE_MOI } from '../hooks/useMoi'
 
 const LIBELLES_ROLE: Record<string, string> = {
@@ -142,11 +143,12 @@ export function MenuUtilisateur({ moi }: { moi: Moi }) {
         aria-expanded={ouvert}
         aria-controls={ouvert ? idMenu : undefined}
         onClick={() => setOuvert((valeur) => !valeur)}
-        className="flex h-11 cursor-pointer items-center gap-2 rounded-md border border-bordure bg-surface px-3 transition-[background-color,transform] duration-rapide ease-apparition hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+        className="flex h-11 cursor-pointer items-center gap-2 rounded-md px-2 transition-[background-color,transform] duration-rapide ease-apparition hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
       >
-        <span className="flex max-w-40 flex-col items-start leading-tight">
+        <CarreInitiale nom={moi.utilisateur.nom} taille={40} arrondi />
+        <span className="hidden max-w-40 flex-col items-start leading-tight sm:flex">
           <span className="truncate text-petit font-semibold text-texte">{moi.utilisateur.nom}</span>
-          <span className="truncate text-[11px] text-texte-secondaire">{moi.etablissement?.nom}</span>
+          <span className="truncate text-[11px] text-texte-secondaire">{LIBELLES_ROLE[moi.role] ?? moi.role}</span>
         </span>
         <ChevronDown
           aria-hidden="true"
@@ -171,10 +173,13 @@ export function MenuUtilisateur({ moi }: { moi: Moi }) {
             aria-label="Menu utilisateur"
             className="fixed inset-x-0 bottom-0 z-30 animate-entree-panneau rounded-t-xl border-t border-bordure-forte bg-surface-haute p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-flottant sm:absolute sm:inset-x-auto sm:bottom-auto sm:top-full sm:right-0 sm:mt-2 sm:w-64 sm:animate-entree-haut sm:rounded-xl sm:border sm:pb-2"
           >
-            <div className="border-b border-bordure px-3 py-2">
-              <p className="truncate text-corps font-semibold text-texte">{moi.utilisateur.nom}</p>
-              <p className="truncate text-petit text-texte-secondaire">{moi.utilisateur.email}</p>
-              <p className="text-petit text-texte-secondaire">{LIBELLES_ROLE[moi.role] ?? moi.role}</p>
+            <div className="flex items-center gap-3 border-b border-bordure px-3 py-3">
+              <CarreInitiale nom={moi.utilisateur.nom} taille={40} arrondi />
+              <div className="min-w-0">
+                <p className="truncate text-corps font-semibold text-texte">{moi.utilisateur.nom}</p>
+                <p className="truncate text-petit text-texte-secondaire">{moi.utilisateur.email}</p>
+                <p className="text-petit text-texte-secondaire">{LIBELLES_ROLE[moi.role] ?? moi.role}</p>
+              </div>
             </div>
 
             <div className="py-1">

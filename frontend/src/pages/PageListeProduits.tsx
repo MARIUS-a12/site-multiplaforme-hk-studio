@@ -7,7 +7,7 @@
  * (modifier, archiver/republier) ; la création passe par le bouton
  * "Ajouter un produit".
  */
-import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Package, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -19,6 +19,7 @@ import { BandeStatistiques } from '../components/BandeStatistiques'
 import { BarreFiltres } from '../components/BarreFiltres'
 import { Bouton } from '../components/Bouton'
 import { CarreInitiale } from '../components/CarreInitiale'
+import { EnteteDePage } from '../components/EnteteDePage'
 import { EtatChargement } from '../components/EtatChargement'
 import { EtatErreur } from '../components/EtatErreur'
 import { EtatVide } from '../components/EtatVide'
@@ -114,21 +115,26 @@ export function PageListeProduits() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       {messageSucces && <BandeauSucces message={messageSucces} onFermer={fermerBandeauSucces} />}
 
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-titre-page font-bold text-texte">Produits</h1>
-        {peutGererCatalogue && (
-          <Bouton
-            variante="principal"
-            icone={<Plus aria-hidden="true" size={20} strokeWidth={1.5} />}
-            onClick={() => navigate('/admin/produits/nouveau')}
-          >
-            <span className="hidden sm:inline">Ajouter un produit</span>
-          </Bouton>
-        )}
-      </div>
+      <EnteteDePage
+        icone={<Package aria-hidden="true" size={22} strokeWidth={1.75} />}
+        couleur="vert"
+        titre="Produits"
+        sousTitre="Le catalogue visible par vos clients sur la boutique."
+        action={
+          peutGererCatalogue ? (
+            <Bouton
+              variante="principal"
+              icone={<Plus aria-hidden="true" size={20} strokeWidth={1.5} />}
+              onClick={() => navigate('/admin/produits/nouveau')}
+            >
+              Ajouter un produit
+            </Bouton>
+          ) : undefined
+        }
+      />
 
       <BandeStatistiques />
 
@@ -327,14 +333,18 @@ export function PageListeProduits() {
           </table>
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-1 text-petit text-texte-secondaire">
+          <div className="flex flex-col items-center justify-between gap-3 pt-1 text-petit text-texte-secondaire sm:flex-row">
             <span className="tabular-nums">
-              Page {data.meta.current_page} sur {data.meta.last_page} — {data.meta.total} produits
+              Affichage de {(data.meta.current_page - 1) * data.meta.per_page + 1} à{' '}
+              {Math.min(data.meta.current_page * data.meta.per_page, data.meta.total)} sur {data.meta.total} produits
             </span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Bouton variante="secondaire" taille="petite" disabled={page <= 1 || isFetching} onClick={() => setPage((p) => p - 1)}>
                 Précédent
               </Bouton>
+              <span className="flex h-11 min-w-11 items-center justify-center rounded-md bg-marine px-3 text-corps font-medium tabular-nums text-white">
+                {data.meta.current_page}
+              </span>
               <Bouton
                 variante="secondaire"
                 taille="petite"

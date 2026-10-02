@@ -15,6 +15,15 @@
    */
   --font-sans:
     system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /*
+   * Étape 8 : "titre" vaut --font-sans partout par défaut (système, donc —
+   * la vitrine n'en a pas d'autre). Seul .back-office la redéfinit sur
+   * Poppins : c'est le SEUL endroit de la plateforme qui télécharge une
+   * police web, et seulement quand ce conteneur est réellement monté (voir
+   * lib/chargerPolicesBackOffice.ts, appelé par RouteProtegee) — un visiteur
+   * de la vitrine ne déclenche jamais cette requête.
+   */
+  --font-titre: var(--font-sans);
 
   /*
    * Trois niveaux de surface (Étape 7) : le fond de page (surface-alt, gris
@@ -50,6 +59,32 @@
    */
   --color-accent: var(--color-primaire);
   --color-accent-texte: #ffffff;
+
+  /*
+   * Étape 8 — identité visuelle du BACK-OFFICE (maquette de référence),
+   * jamais utilisée par la vitrine : bleu marine, orange, bleu d'info et
+   * violet n'ont pas d'équivalent pré-existant à réutiliser (contrairement à
+   * primaire/danger/succes ci-dessus, repris tels quels par .back-office
+   * plus bas), donc aucun risque de fuite vers la vitrine à les déclarer ici
+   * sans les y surcharger.
+   *
+   * #FF7518 pur donne un ratio de 2,69:1 avec du texte blanc — trop faible
+   * (seuil WCAG : 4,5:1). --color-orange-texte en est une variante
+   * assombrie (même teinte, luminosité réduite) réservée à toute surface
+   * PLEINE portant du texte blanc (ex. l'entrée de navigation active) ;
+   * --color-orange reste réservé aux carrés d'icônes et accents SANS texte,
+   * où ce seuil ne s'applique pas. Même logique, même calcul
+   * (App\Support\Couleur\ContrasteCouleur) pour le bleu d'info (4,17:1 pur,
+   * insuffisant) et le rouge (4,20:1 pur, insuffisant). Le vert (4,54:1) et
+   * le violet (4,61:1) passent déjà tels quels, aucune variante nécessaire.
+   */
+  --color-marine: #0f1f38;
+  --color-orange: #ff7518;
+  --color-orange-texte: #b55210; /* 5,02:1 avec du blanc */
+  --color-bleu-info: #2878f0;
+  --color-bleu-info-texte: #246edc; /* 4,84:1 avec du blanc */
+  --color-violet: #8957e5;
+  --color-danger-texte: #d2343f; /* 4,88:1 avec du blanc — rouge pur : 4,20:1 */
 
   /*
    * Trois ombres, toutes directionnelles (décalées vers le bas, jamais
@@ -199,6 +234,34 @@ body {
 .vitrine {
   --color-surface-alt: #f7f7f8;
   --color-bordure: #e1e3e6;
+}
+
+/*
+ * Étape 8 — identité visuelle du back-office (maquette de référence),
+ * portée par CoquilleApplication, jamais par la vitrine. Redéfinit les
+ * jetons génériques déjà utilisés par des dizaines de composants
+ * (bg-surface, text-texte-secondaire, border-bordure, bg-primaire,
+ * bg-danger/10...) : chacun d'eux se re-dessine automatiquement aux
+ * couleurs de la maquette sans qu'aucun composant n'ait eu à changer une
+ * seule classe — exactement le même principe que .vitrine ci-dessus, pour
+ * la même raison (un seul jeu de composants, deux habillages).
+ */
+.back-office {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-titre: 'Poppins', 'Inter', system-ui, sans-serif;
+
+  --color-surface: #ffffff;
+  --color-surface-haute: #ffffff;
+  --color-surface-alt: #f5f8fc;
+  --color-bordure: #e2e8f0;
+  --color-bordure-forte: #cbd5e1;
+  --color-texte: #14233f;
+  --color-texte-secondaire: #718096;
+
+  --color-primaire: #07884a;
+  --color-primaire-fonce: #05733e;
+  --color-succes: #07884a;
+  --color-danger: #e53945;
 }
 
 /*

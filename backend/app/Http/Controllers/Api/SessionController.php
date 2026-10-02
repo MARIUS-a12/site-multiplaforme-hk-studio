@@ -129,6 +129,10 @@ class SessionController extends Controller
                 // afficher au formulaire produit (quantité vs interrupteur),
                 // avant même qu'un seul produit existe pour le déduire.
                 'type' => $etablissement->type,
+                // Étape 8 : la carte de statut de la barre latérale ("Tout
+                // fonctionne correctement") reflète CET état réel, jamais
+                // une valeur codée en dur.
+                'statut' => $etablissement->statut,
             ],
             'role' => $role->nom,
             'permissions' => $role->permissions->pluck('nom')->values(),

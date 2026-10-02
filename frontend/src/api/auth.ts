@@ -15,7 +15,7 @@ export type TypeEtablissement = 'boutique' | 'restaurant'
 
 export type Moi = {
   utilisateur: Utilisateur
-  etablissement: { id: number; nom: string; type: TypeEtablissement } | null
+  etablissement: { id: number; nom: string; type: TypeEtablissement; statut: string } | null
   role: string
   permissions: string[]
 }

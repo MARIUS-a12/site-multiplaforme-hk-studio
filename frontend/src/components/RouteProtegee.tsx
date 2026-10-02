@@ -12,11 +12,12 @@
  * soit l'URL demandée — sauf /admin/compte (Étape 7), accessible à TOUT
  * utilisateur authentifié sans distinction de rôle, lui compris.
  */
-const CHEMIN_COMPTE = '/admin/compte'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useMoi } from '../hooks/useMoi'
 import { CoquilleApplication } from './CoquilleApplication'
 import { CoquilleSuperAdmin } from './CoquilleSuperAdmin'
+
+const CHEMIN_COMPTE = '/admin/compte'
 
 export function RouteProtegee() {
   const { data: moi, isPending, isError } = useMoi()

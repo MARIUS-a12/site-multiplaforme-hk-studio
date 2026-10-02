@@ -1,34 +1,46 @@
 /**
- * Coquille visuelle de l'app une fois connecté : en-tête fixe (nom de
- * l'établissement, menu utilisateur) + zone de contenu. Rendue par
- * RouteProtegee, jamais montée directement par une route. "Paramètres" ne
- * vit plus ici en icône isolée : il est entré dans le menu utilisateur (voir
- * MenuUtilisateur) avec Mon compte et Paiement. Pas de navigation principale
- * dans l'en-tête (Produits/Catégories) : chaque page y mène depuis ailleurs.
+ * Coquille visuelle de l'app une fois connecté : barre latérale fixe
+ * (Étape 8, maquette de référence) + barre supérieure + zone de contenu.
+ * Rendue par RouteProtegee, jamais montée directement par une route.
+ *
+ * ".back-office" sur le conteneur racine re-dessine tous les jetons de
+ * couleur génériques (surface, bordure, texte, primaire, danger...) aux
+ * couleurs de la maquette (voir index.css) — aucun composant partagé
+ * (Bouton, badges, champs...) n'a eu besoin de changer une seule classe
+ * pour ça, exactement comme ".vitrine" le fait côté boutique publique.
+ * "font-sans" réaffirme la police locale (Inter, voir index.css) sur cet
+ * élément : la police du <body> ne se retype pas toute seule, elle est
+ * fixée à la police système plus haut dans l'arbre, hors de cette portée.
+ *
+ * Poppins/Inter ne sont chargées qu'ici, au montage (voir
+ * lib/chargerPolicesBackOffice.ts) — jamais pour un visiteur de la vitrine.
  */
 import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import type { Moi } from '../api/auth'
-import { CarreInitiale } from './CarreInitiale'
-import { MenuUtilisateur } from './MenuUtilisateur'
+import { BarreLaterale } from './BarreLaterale'
+import { BarreSuperieure } from './BarreSuperieure'
+import { chargerPolicesBackOffice } from '../lib/chargerPolicesBackOffice'
 import { TransitionPage } from './TransitionPage'
 
 export function CoquilleApplication({ moi, children }: { moi: Moi; children: ReactNode }) {
-  const nomEtablissement = moi.etablissement?.nom ?? 'Back-office'
+  const [menuLateralOuvert, setMenuLateralOuvert] = useState(false)
+
+  useEffect(() => {
+    chargerPolicesBackOffice()
+  }, [])
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-bordure bg-surface px-4">
-        <div className="flex items-center gap-3">
-          <CarreInitiale nom={nomEtablissement} taille={40} />
-          <span className="truncate text-corps font-semibold text-texte">{nomEtablissement}</span>
-        </div>
+    <div className="back-office min-h-screen bg-surface-alt font-sans">
+      <BarreLaterale moi={moi} ouvertMobile={menuLateralOuvert} onFermerMobile={() => setMenuLateralOuvert(false)} />
 
-        <MenuUtilisateur moi={moi} />
-      </header>
+      <div className="lg:pl-[260px]">
+        <BarreSuperieure moi={moi} onOuvrirMenuLateral={() => setMenuLateralOuvert(true)} />
 
-      <main className="p-4">
-        <TransitionPage>{children}</TransitionPage>
-      </main>
+        <main className="p-4 sm:p-6">
+          <TransitionPage>{children}</TransitionPage>
+        </main>
+      </div>
     </div>
   )
 }
