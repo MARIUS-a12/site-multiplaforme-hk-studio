@@ -49,6 +49,11 @@ export type EntreeHistoriqueCommande = {
 
 export type CommandeDetail = Commande & {
   zone_livraison: { nom: string; frais: number } | null
+  // Correctif livraison : null pour toute commande antérieure à ces
+  // colonnes — jamais une chaîne vide ni "non renseigné" à afficher à la
+  // place (voir PageDetailCommande).
+  commune: string | null
+  quartier: string | null
   lignes: LigneCommande[]
   historique: EntreeHistoriqueCommande[]
 }

@@ -27,6 +27,11 @@ class CommandeResource extends JsonResource
             'frais_livraison' => $this->frais_livraison,
             'total' => $this->total,
             'note' => $this->note,
+            // Correctif livraison : null pour toute commande antérieure à
+            // cette colonne — jamais une chaîne vide ni "non renseigné"
+            // affichée à sa place (voir PageDetailCommande côté frontend).
+            'commune' => $this->commune,
+            'quartier' => $this->quartier,
             'created_at' => $this->created_at,
             'nombre_articles' => $this->lignes->sum('quantite'),
             // Une commande non traitée depuis plus de 2h : un client qui

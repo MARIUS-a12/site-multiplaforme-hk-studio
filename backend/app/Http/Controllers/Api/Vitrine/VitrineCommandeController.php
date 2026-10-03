@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Vitrine;
 use App\Enums\Canal;
 use App\Enums\SourceCommande;
 use App\Enums\StatutProduit;
+use App\Enums\StatutZoneLivraison;
 use App\Exceptions\ArticleIndisponibleException;
 use App\Exceptions\SelectionVarianteInvalideException;
 use App\Http\Controllers\Controller;
@@ -24,13 +25,17 @@ use Illuminate\Http\Request;
 /**
  * Branche la vitrine sur le noyau de commande existant (CreerCommande,
  * réservation atomique, idempotence, numérotation — voir Étape 6B, rien de
- * tout ça n'est réécrit ici). Les deux seules choses que ce contrôleur
- * ajoute, que ce noyau ne fait pas lui-même parce qu'il sert aussi d'autres
- * canaux (back-office, IA WhatsApp) :
+ * tout ça n'est réécrit ici). Ce que ce contrôleur ajoute, que ce noyau ne
+ * fait pas lui-même parce qu'il sert aussi d'autres canaux (back-office, IA
+ * WhatsApp) :
  * - vérifier que chaque produit est bien publié (CreerCommande ne vérifie que
  *   son existence et son stock, jamais son statut de publication) ;
- * - trouver ou créer le client par téléphone, et poser la note libre, deux
- *   champs que le service ne gère pas.
+ * - trouver ou créer le client par téléphone ;
+ * - résoudre la commune envoyée en ZoneLivraison (correctif livraison) :
+ *   quand l'établissement a des zones actives, "commune" EST le nom d'une
+ *   d'entre elles (déjà vérifié par CreerCommandeVitrineRequest) — on la
+ *   retrouve ici pour en tirer le frais et l'identifiant à enregistrer,
+ *   jamais un zone_livraison_id envoyé par le navigateur.
  */
 class VitrineCommandeController extends Controller
 {
@@ -64,8 +69,11 @@ class VitrineCommandeController extends Controller
                 email: $donneesClient['email'] ?? null,
             );
 
-            $zoneLivraisonId = $request->validated('zone_livraison_id');
-            $zoneLivraison = $zoneLivraisonId !== null ? ZoneLivraison::find($zoneLivraisonId) : null;
+            $commune = $request->validated('commune');
+            $zoneLivraison = ZoneLivraison::where('etablissement_id', $etablissement->id)
+                ->where('statut', StatutZoneLivraison::Actif->value)
+                ->where('nom', $commune)
+                ->first();
 
             $lignes = array_map(
                 fn (array $ligne) => new LigneCommandeDemandee(
@@ -92,9 +100,9 @@ class VitrineCommandeController extends Controller
         }
 
         // Rejouer la même clé d'idempotence redonne la commande déjà créée,
-        // avec sa note déjà posée : cette ré-écriture est sans effet, jamais
-        // incorrecte (même soumission, même page, même note).
-        $commande->update(['note' => $request->validated('note')]);
+        // avec son adresse déjà posée : cette ré-écriture est sans effet,
+        // jamais incorrecte (même soumission, même page, même adresse).
+        $commande->update(['commune' => $commune, 'quartier' => $request->validated('quartier')]);
 
         return response()->json([
             'numero' => $commande->numero,

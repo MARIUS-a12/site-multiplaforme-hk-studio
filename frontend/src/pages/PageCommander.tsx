@@ -1,11 +1,18 @@
 /**
  * Écran public "/commander" — une seule page, pas un assistant en plusieurs
- * écrans (voir Étape 6B) : coordonnées, zone de livraison, note, et le
+ * écrans (voir Étape 6B) : coordonnées, adresse de livraison, et le
  * récapitulatif recalculé par le serveur, tout sur le même écran. La clé
  * d'idempotence est générée une fois à l'ouverture de la page et conservée
  * tant qu'on ne la quitte pas (useState avec initialiseur) — un double clic
  * sur "Valider la commande" envoie deux fois la MÊME clé, jamais deux
  * commandes (voir CreerCommande, côté serveur, qui la rejoue).
+ *
+ * Correctif livraison : Email et Note (inutiles pour un commerçant ivoirien)
+ * ont été retirés, remplacés par Commune et Quartier, tous deux
+ * obligatoires — ce dont un livreur a réellement besoin. "Commune" remplace
+ * l'ancien sélecteur de zone de livraison (une liste déroulante quand
+ * l'établissement en a, du texte libre sinon) : on ne demande pas deux fois
+ * la même chose.
  */
 import { useState } from 'react'
 import type { FormEvent } from 'react'
@@ -22,7 +29,7 @@ import { creerCommandeVitrine, recupererZonesLivraison } from '../api/vitrine'
 import { allerAuPremierChampEnErreur, extraireErreursChamps } from '../lib/erreursValidation'
 import { formaterMontant } from '../lib/formatage'
 
-const ORDRE_CHAMPS = ['client.nom', 'client.telephone', 'client.email', 'zone_livraison_id', 'note']
+const ORDRE_CHAMPS = ['client.nom', 'client.telephone', 'commune', 'quartier']
 
 function extraireErreurArticle(erreur: unknown): { message: string; article: string } | null {
   if (!axios.isAxiosError(erreur) || erreur.response?.status !== 422) {
@@ -43,9 +50,8 @@ export function PageCommander() {
   const [cleIdempotence] = useState(() => crypto.randomUUID())
   const [nom, setNom] = useState('')
   const [telephone, setTelephone] = useState('')
-  const [email, setEmail] = useState('')
-  const [zoneLivraisonId, setZoneLivraisonId] = useState<number | null>(null)
-  const [note, setNote] = useState('')
+  const [commune, setCommune] = useState('')
+  const [quartier, setQuartier] = useState('')
   const [erreurs, setErreurs] = useState<Record<string, string>>({})
   const [erreurGenerique, setErreurGenerique] = useState<string | null>(null)
 
@@ -89,14 +95,15 @@ export function PageCommander() {
         variante_id: ligne.varianteId,
         quantite: ligne.quantite,
       })),
-      client: { nom, telephone, email: email || null },
-      zone_livraison_id: zoneLivraisonId,
-      note: note || null,
+      client: { nom, telephone },
+      commune,
+      quartier,
       cle_idempotence: cleIdempotence,
     })
   }
 
-  const zoneChoisie = requeteZones.data?.find((zone) => zone.id === zoneLivraisonId) ?? null
+  const zonesExistent = (requeteZones.data?.length ?? 0) > 0
+  const zoneChoisie = requeteZones.data?.find((zone) => zone.nom === commune) ?? null
   const sousTotal = requeteVerification.data?.sous_total ?? 0
   const fraisLivraison = zoneChoisie?.frais ?? 0
   const total = sousTotal + fraisLivraison
@@ -143,49 +150,51 @@ export function PageCommander() {
               onChange={setTelephone}
               erreur={erreurs['client.telephone']}
             />
-            <ChampTexteVitrine
-              id="client.email"
-              label="Email (facultatif)"
-              type="email"
-              valeur={email}
-              onChange={setEmail}
-              erreur={erreurs['client.email']}
-            />
 
-            {requeteZones.data && requeteZones.data.length > 0 && (
+            {zonesExistent ? (
               <div>
-                <label htmlFor="zone_livraison_id" className="mb-1 block text-petit font-medium text-texte">
-                  Zone de livraison
+                <label htmlFor="commune" className="mb-1 block text-petit font-medium text-texte">
+                  Commune <span aria-hidden="true" className="text-danger">*</span>
                 </label>
                 <select
-                  id="zone_livraison_id"
-                  value={zoneLivraisonId ?? ''}
-                  onChange={(evenement) =>
-                    setZoneLivraisonId(evenement.target.value ? Number(evenement.target.value) : null)
-                  }
+                  id="commune"
+                  required
+                  value={commune}
+                  onChange={(evenement) => setCommune(evenement.target.value)}
                   className="h-11 w-full rounded border border-bordure bg-surface px-3 text-corps text-texte transition-colors focus:border-texte focus:outline focus:outline-2 focus:outline-texte focus:outline-offset-1"
                 >
-                  <option value="">Retrait sur place</option>
-                  {requeteZones.data.map((zone) => (
-                    <option key={zone.id} value={zone.id}>
+                  <option value="" disabled>
+                    Choisissez votre commune
+                  </option>
+                  {requeteZones.data?.map((zone) => (
+                    <option key={zone.id} value={zone.nom}>
                       {zone.nom} — {formaterMontant(zone.frais)}
                     </option>
                   ))}
                 </select>
-                {erreurs.zone_livraison_id && (
-                  <p className="animate-entree-champ mt-1 text-petit text-danger">{erreurs.zone_livraison_id}</p>
-                )}
+                {erreurs.commune && <p className="animate-entree-champ mt-1 text-petit text-danger">{erreurs.commune}</p>}
               </div>
+            ) : (
+              <ChampTexteVitrine
+                id="commune"
+                label="Commune"
+                requis
+                maxLength={100}
+                valeur={commune}
+                onChange={setCommune}
+                erreur={erreurs.commune}
+              />
             )}
 
             <ChampTexteVitrine
-              id="note"
-              label="Note pour le commerçant (facultatif)"
-              multiligne
-              maxLength={500}
-              valeur={note}
-              onChange={setNote}
-              erreur={erreurs.note}
+              id="quartier"
+              label="Quartier"
+              requis
+              maxLength={150}
+              placeholder="Angré 7e tranche, près de la pharmacie"
+              valeur={quartier}
+              onChange={setQuartier}
+              erreur={erreurs.quartier}
             />
 
             <button

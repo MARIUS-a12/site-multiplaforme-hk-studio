@@ -203,9 +203,13 @@ export async function recupererZonesLivraison(): Promise<ZoneLivraisonVitrine[]>
 
 export type NouvelleCommandePayload = {
   lignes: { produit_id: number; variante_id: number | null; quantite: number }[]
-  client: { nom: string; telephone: string; email: string | null }
-  zone_livraison_id: number | null
-  note: string | null
+  client: { nom: string; telephone: string }
+  // Correctif livraison : remplace zone_livraison_id — "commune" EST le nom
+  // de la zone choisie quand l'établissement en a, du texte libre sinon
+  // (voir PageCommander). Le serveur la résout lui-même en zone pour le
+  // calcul du frais, jamais un identifiant envoyé par le navigateur.
+  commune: string
+  quartier: string
   cle_idempotence: string
 }
 

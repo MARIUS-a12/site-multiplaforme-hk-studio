@@ -7,7 +7,7 @@
  * confort d'affichage, jamais la seule barrière.
  */
 import axios from 'axios'
-import { ImageOff, MessageCircle, Package } from 'lucide-react'
+import { ImageOff, MapPin, MessageCircle, Package } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
@@ -34,8 +34,12 @@ function formaterDateHeure(date: string): string {
   })
 }
 
-function lienWhatsapp(telephone: string, numero: string): string {
-  const message = `Bonjour, à propos de votre commande ${numero}.`
+function lienWhatsapp(telephone: string, numero: string, commune: string | null, quartier: string | null): string {
+  const adresse = [commune, quartier].filter(Boolean).join(', ')
+  const message = adresse
+    ? `Bonjour, à propos de votre commande ${numero}, à livrer à ${adresse}.`
+    : `Bonjour, à propos de votre commande ${numero}.`
+
   return `https://wa.me/${telephone.replace('+', '')}?text=${encodeURIComponent(message)}`
 }
 
@@ -141,7 +145,7 @@ export function PageDetailCommande() {
           </div>
           {commande.client && (
             <a
-              href={lienWhatsapp(commande.client.telephone, commande.numero)}
+              href={lienWhatsapp(commande.client.telephone, commande.numero, commande.commune, commande.quartier)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-md border-2 border-primaire px-4 text-corps font-medium text-primaire transition-colors hover:bg-primaire/10 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
@@ -151,6 +155,17 @@ export function PageDetailCommande() {
             </a>
           )}
         </div>
+
+        {(commande.commune || commande.quartier) && (
+          <div className="mt-3 flex items-start gap-2 rounded-md bg-surface-alt p-3">
+            <MapPin aria-hidden="true" size={18} strokeWidth={1.75} className="mt-0.5 shrink-0 text-texte-secondaire" />
+            <div className="text-corps text-texte">
+              {commande.commune && <p className="font-semibold">{commande.commune}</p>}
+              {commande.quartier && <p className="text-texte-secondaire">{commande.quartier}</p>}
+            </div>
+          </div>
+        )}
+
         <div className="mt-3">
           <IconeCanal canal={commande.canal} />
         </div>

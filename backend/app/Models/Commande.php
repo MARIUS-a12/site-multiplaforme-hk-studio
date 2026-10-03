@@ -41,6 +41,8 @@ class Commande extends Model
         'expire_le',
         'payee_le',
         'note',
+        'commune',
+        'quartier',
     ];
 
     /**

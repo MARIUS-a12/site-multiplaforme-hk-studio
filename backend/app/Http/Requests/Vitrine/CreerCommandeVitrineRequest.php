@@ -3,10 +3,12 @@
 namespace App\Http\Requests\Vitrine;
 
 use App\Enums\StatutZoneLivraison;
+use App\Models\ZoneLivraison;
 use App\Rules\NumeroTelephoneIvoirien;
 use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 
 /**
  * Le panier (lignes) n'arrive ici que par identifiants et quantités : un
@@ -14,12 +16,28 @@ use Illuminate\Validation\Rule;
  * des champs validés, donc $request->validated() ne les reprend jamais — le
  * serveur ne peut littéralement pas les lire, encore moins les utiliser (voir
  * VitrineCommandeController, qui recalcule tout via CreerCommande).
+ *
+ * Correctif livraison — remplace "zone_livraison_id" : un seul champ
+ * "commune" ("on ne demande pas deux fois la même chose"), liste déroulante
+ * quand l'établissement a des zones actives, texte libre sinon. Dans le
+ * premier cas, la commune DOIT correspondre au nom d'une zone active DE CET
+ * ÉTABLISSEMENT — c'est VitrineCommandeController qui la résout ensuite en
+ * ZoneLivraison pour le calcul du frais, jamais un identifiant envoyé par le
+ * navigateur.
  */
 class CreerCommandeVitrineRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'commune' => is_string($this->input('commune')) ? trim($this->input('commune')) : $this->input('commune'),
+            'quartier' => is_string($this->input('quartier')) ? trim($this->input('quartier')) : $this->input('quartier'),
+        ]);
     }
 
     public function rules(): array
@@ -35,19 +53,9 @@ class CreerCommandeVitrineRequest extends FormRequest
             'client.telephone' => ['required', 'string', new NumeroTelephoneIvoirien],
             'client.email' => ['nullable', 'email', 'max:255'],
 
-            // Scopé à l'établissement courant explicitement : Rule::exists
-            // interroge la table directement, sans passer par Eloquent — le
-            // scope global tenant-isolé (ScopeEtablissement) ne s'applique
-            // donc pas ici tout seul.
-            'zone_livraison_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('zones_livraison', 'id')
-                    ->where('etablissement_id', app(ContexteEtablissement::class)->id())
-                    ->where('statut', StatutZoneLivraison::Actif->value),
-            ],
+            'commune' => ['required', 'string', ...$this->regleCommune()],
+            'quartier' => ['required', 'string', 'max:150'],
 
-            'note' => ['nullable', 'string', 'max:500'],
             'cle_idempotence' => ['required', 'string', 'max:255'],
 
             // Étape 6C-1 : aucun appel CinetPay n'existe encore, mais le
@@ -65,10 +73,22 @@ class CreerCommandeVitrineRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array{0: In|string}
+     */
+    private function regleCommune(): array
+    {
+        $nomsZonesActives = ZoneLivraison::where('etablissement_id', app(ContexteEtablissement::class)->id())
+            ->where('statut', StatutZoneLivraison::Actif->value)
+            ->pluck('nom');
+
+        return $nomsZonesActives->isNotEmpty() ? [Rule::in($nomsZonesActives)] : ['max:100'];
+    }
+
     public function messages(): array
     {
         return [
-            'zone_livraison_id.exists' => "Cette zone de livraison n'est plus disponible.",
+            'commune.in' => "Choisissez une commune dans la liste proposée.",
         ];
     }
 }

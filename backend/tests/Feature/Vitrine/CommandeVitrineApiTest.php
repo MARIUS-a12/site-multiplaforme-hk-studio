@@ -40,6 +40,19 @@ class CommandeVitrineApiTest extends TestCase
         ], $surcharge);
     }
 
+    /**
+     * Commune et quartier sont obligatoires depuis le correctif livraison —
+     * en texte libre ici (chez-awa n'a par défaut aucune zone de livraison
+     * active dans ces tests, sauf test_8 qui en crée une explicitement).
+     */
+    private function payloadLivraison(array $surcharge = []): array
+    {
+        return array_merge([
+            'commune' => 'Cocody',
+            'quartier' => 'Angré 7e tranche',
+        ], $surcharge);
+    }
+
     public function test_1_un_prix_envoye_par_le_navigateur_est_ignore(): void
     {
         $this->seed();
@@ -56,6 +69,7 @@ class CommandeVitrineApiTest extends TestCase
                 ['produit_id' => $produit->id, 'quantite' => 2, 'prix' => 1, 'total' => 2],
             ],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-prix-ignore',
         ]);
 
@@ -77,6 +91,7 @@ class CommandeVitrineApiTest extends TestCase
         $reponse = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 5]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-stock-insuffisant',
         ]);
 
@@ -95,6 +110,7 @@ class CommandeVitrineApiTest extends TestCase
         $corps = [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-rejouee',
         ];
 
@@ -119,11 +135,13 @@ class CommandeVitrineApiTest extends TestCase
         $premiere = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-a',
         ]);
         $seconde = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-b',
         ]);
 
@@ -144,11 +162,13 @@ class CommandeVitrineApiTest extends TestCase
         $premiere = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(['telephone' => '0701020304']),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-local',
         ]);
         $seconde = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(['telephone' => '+225 07 01 02 03 04']),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-international',
         ]);
 
@@ -171,12 +191,14 @@ class CommandeVitrineApiTest extends TestCase
         $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produitAwa->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-awa',
         ])->assertStatus(201);
 
         $this->depuis('maquis-du-port.localhost')->postJson('http://maquis-du-port.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produitMaquis->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-maquis',
         ])->assertStatus(201);
 
@@ -194,6 +216,7 @@ class CommandeVitrineApiTest extends TestCase
         $reponse = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-canal-source',
         ]);
 
@@ -211,12 +234,16 @@ class CommandeVitrineApiTest extends TestCase
             'quantite_stock' => 10,
             'quantite_reservee' => 0,
         ]);
-        $zone = $chezAwa->zonesLivraison()->create(['nom' => 'Cocody', 'frais' => 1500]);
+        // "Cocody" : correspond au nom de la zone ET à la commune par défaut
+        // de payloadLivraison() — c'est désormais la commune choisie, pas un
+        // zone_livraison_id séparé, qui détermine la zone (voir le correctif
+        // livraison : "on ne demande pas deux fois la même chose").
+        $chezAwa->zonesLivraison()->create(['nom' => 'Cocody', 'frais' => 1500]);
 
         $reponse = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => $this->payloadClient(),
-            'zone_livraison_id' => $zone->id,
+            ...$this->payloadLivraison(),
             'frais_livraison' => 1, // ignoré : jamais dans les champs validés
             'cle_idempotence' => 'cle-livraison',
         ]);
@@ -238,6 +265,7 @@ class CommandeVitrineApiTest extends TestCase
         $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 3]],
             'client' => $this->payloadClient(),
+            ...$this->payloadLivraison(),
             'cle_idempotence' => 'cle-reservation',
         ])->assertStatus(201);
 

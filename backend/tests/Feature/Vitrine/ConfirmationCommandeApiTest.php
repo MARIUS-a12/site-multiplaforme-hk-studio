@@ -39,6 +39,8 @@ class ConfirmationCommandeApiTest extends TestCase
         $reponse = $this->depuis($hote)->postJson("http://{$hote}:8000/api/vitrine/commandes", [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 1]],
             'client' => ['nom' => 'Client Test', 'telephone' => '0701020304'],
+            'commune' => 'Cocody',
+            'quartier' => 'Angré 7e tranche',
             'cle_idempotence' => $cle,
         ]);
 

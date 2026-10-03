@@ -55,6 +55,8 @@ class CommandeControllerApiTest extends TestCase
         $reponse = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/vitrine/commandes', [
             'lignes' => [['produit_id' => $produit->id, 'quantite' => 2]],
             'client' => ['nom' => 'Fatou Koné', 'telephone' => '0701020304'],
+            'commune' => 'Cocody',
+            'quartier' => 'Angré 7e tranche',
             'cle_idempotence' => $cleIdempotence,
         ]);
 
