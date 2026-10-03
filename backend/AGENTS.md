@@ -171,3 +171,15 @@ WithoutModelEvents dans les seeders comme dans les tests.
 Appliquer sur la base de DÉVELOPPEMENT aussi (php artisan migrate),
 pas seulement sur les bases de test. Et vérifier à la main dans tinker
 qu'un parcours réel fonctionne avant de déclarer une étape terminée.
+
+## Limitation de débit
+La limitation de débit sur une route publique sensible (connexion,
+activation, etc.) se fait par email ET par IP, jamais par IP seule.
+Une IP seule pénalise des utilisateurs sans lien entre eux qui la
+partagent (opérateurs mobiles). Voir App\Support\RateLimiting\LimiteurEmailEtIp.
+
+## Documentation
+Voir decisions.md à la racine pour le pourquoi des choix d'architecture
+non évidents. Ce fichier (AGENTS.md) ne contient que des règles de
+méthode, jamais une description du code (routes, permissions, tables) :
+ce contenu se périme et devient faux dès le prochain changement.
