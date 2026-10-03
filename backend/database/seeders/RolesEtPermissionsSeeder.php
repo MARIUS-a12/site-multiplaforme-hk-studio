@@ -11,18 +11,42 @@ class RolesEtPermissionsSeeder extends Seeder
     private const PERMISSIONS = [
         'voir_catalogue' => 'Voir le catalogue',
         'gerer_catalogue' => 'Gérer le catalogue',
+        // Étape 10 : distincte de gerer_catalogue — autorise UNIQUEMENT la
+        // modification des quantités en stock, jamais un prix, un nom, ni la
+        // publication/archivage d'un produit (voir ProduitPolicy::ajusterStock
+        // et AjusterStockProduitRequest, qui n'accepte que ce seul champ).
+        'gerer_stock' => 'Gérer le stock',
         'voir_commandes' => 'Voir les commandes',
         'gerer_commandes' => 'Gérer les commandes',
         'gerer_clients' => 'Gérer les clients',
         'voir_statistiques' => 'Voir les statistiques',
         'gerer_parametres' => 'Gérer les paramètres',
         'gerer_integrations' => 'Gérer les intégrations',
+        // Étape 10 : page /admin/equipe, réservée au seul rôle
+        // admin_etablissement (voir EtablissementUtilisateurPolicy).
+        'gerer_equipe' => "Gérer l'équipe",
     ];
 
     private const ROLES = [
         'super_admin' => 'Super administrateur',
         'admin_etablissement' => "Administrateur d'établissement",
         'operateur' => 'Opérateur',
+        'caissier' => 'Caissier',
+        'gestionnaire_stock' => 'Gestionnaire de stock',
+    ];
+
+    /**
+     * Libellé affiché sous le nom de la boutique dans la barre latérale du
+     * back-office ("Espace {libellé}") — voir SessionController::reponseMoi
+     * et BarreLaterale côté frontend, qui ne connaît plus aucun rôle par son
+     * nom : tout nouveau rôle ajouté ICI y apparaît sans y toucher.
+     */
+    private const LIBELLES_ESPACE = [
+        'super_admin' => 'Administration',
+        'admin_etablissement' => 'Administrateur',
+        'operateur' => 'Opérateur',
+        'caissier' => 'Caisse',
+        'gestionnaire_stock' => 'Stock',
     ];
 
     /**
@@ -33,29 +57,35 @@ class RolesEtPermissionsSeeder extends Seeder
      *
      * gerer_catalogue implique déjà de pouvoir lire (voir ProduitPolicy /
      * CategoriePolicy) : voir_catalogue n'a donc besoin d'être listé
-     * explicitement que pour l'opérateur, qui traite les commandes et doit
-     * pouvoir consulter produits et prix sans pouvoir les modifier.
+     * explicitement que pour les rôles qui consultent sans modifier.
      */
     private const ATTRIBUTIONS = [
         'super_admin' => [
-            'voir_catalogue', 'gerer_catalogue', 'voir_commandes', 'gerer_commandes', 'gerer_clients',
-            'voir_statistiques', 'gerer_parametres', 'gerer_integrations',
+            'voir_catalogue', 'gerer_catalogue', 'gerer_stock', 'voir_commandes', 'gerer_commandes', 'gerer_clients',
+            'voir_statistiques', 'gerer_parametres', 'gerer_integrations', 'gerer_equipe',
         ],
         'admin_etablissement' => [
-            'voir_catalogue', 'gerer_catalogue', 'voir_commandes', 'gerer_commandes', 'gerer_clients',
-            'voir_statistiques', 'gerer_parametres', 'gerer_integrations',
+            'voir_catalogue', 'gerer_catalogue', 'gerer_stock', 'voir_commandes', 'gerer_commandes', 'gerer_clients',
+            'voir_statistiques', 'gerer_parametres', 'gerer_integrations', 'gerer_equipe',
         ],
         'operateur' => ['voir_catalogue', 'voir_commandes', 'gerer_commandes', 'gerer_clients'],
+        // Encaisse et traite les commandes, ne touche pas au catalogue.
+        'caissier' => ['voir_catalogue', 'voir_commandes', 'gerer_commandes', 'gerer_clients'],
+        // Ajuste les quantités, ne crée ni ne modifie les produits eux-mêmes.
+        'gestionnaire_stock' => ['voir_catalogue', 'gerer_stock', 'voir_commandes'],
     ];
 
     public function run(): void
     {
         $permissions = collect(self::PERMISSIONS)->map(
-            fn (string $libelle, string $nom) => Permission::firstOrCreate(['nom' => $nom], ['libelle' => $libelle])
+            fn (string $libelle, string $nom) => Permission::updateOrCreate(['nom' => $nom], ['libelle' => $libelle])
         );
 
         foreach (self::ROLES as $nomRole => $libelleRole) {
-            $role = Role::firstOrCreate(['nom' => $nomRole], ['libelle' => $libelleRole]);
+            $role = Role::updateOrCreate(
+                ['nom' => $nomRole],
+                ['libelle' => $libelleRole, 'libelle_espace' => self::LIBELLES_ESPACE[$nomRole] ?? null],
+            );
 
             $role->permissions()->sync(
                 $permissions->only(self::ATTRIBUTIONS[$nomRole])->pluck('id')

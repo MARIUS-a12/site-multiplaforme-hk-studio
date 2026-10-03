@@ -34,7 +34,17 @@ class SessionController extends Controller
 
         $etablissement = $this->resoudreEtablissementConnexion($request);
 
-        $utilisateur = User::where('email', $identifiants['email'])->first();
+        // Étape 10 : l'email n'est plus unique globalement (voir migration
+        // "preparer_utilisateurs_pour_equipe") — le même email peut exister
+        // pour deux comptes distincts dans deux établissements différents.
+        // Sur un sous-domaine d'établissement, on résout donc TOUJOURS le
+        // compte via l'appartenance à CET établissement, jamais un simple
+        // where('email', ...) global qui serait ambigu entre les deux.
+        $utilisateur = $etablissement === null
+            ? User::where('email', $identifiants['email'])->first()
+            : User::whereHas('appartenances', fn ($requete) => $requete->where('etablissement_id', $etablissement->id))
+                ->where('email', $identifiants['email'])
+                ->first();
 
         if ($utilisateur === null || ! Hash::check($identifiants['mot_de_passe'], $utilisateur->password)) {
             $this->echouer();
@@ -60,6 +70,7 @@ class SessionController extends Controller
         // que soit le guard par défaut de l'application.
         Auth::guard('web')->login($utilisateur);
         $request->session()->regenerate();
+        $utilisateur->update(['derniere_connexion_a' => now()]);
 
         return response()->json([
             'utilisateur' => [
@@ -135,6 +146,11 @@ class SessionController extends Controller
                 'statut' => $etablissement->statut,
             ],
             'role' => $role->nom,
+            // Étape 10 : le libellé affiché sous le nom de la boutique
+            // ("Espace Administrateur"...) vient de la base — voir
+            // RolesEtPermissionsSeeder::LIBELLES_ESPACE — jamais d'une liste
+            // codée en dur côté frontend (voir BarreLaterale).
+            'role_libelle_espace' => $role->libelle_espace,
             'permissions' => $role->permissions->pluck('nom')->values(),
         ]);
     }

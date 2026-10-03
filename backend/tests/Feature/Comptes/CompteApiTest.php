@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -81,6 +82,54 @@ class CompteApiTest extends TestCase
 
         $reponse->assertStatus(422);
         $reponse->assertJsonValidationErrors(['nouveau_mot_de_passe']);
+    }
+
+    /**
+     * Correctif pwnedpasswords — même mot de passe que test_2b, mais avec
+     * une réponse simulée qui ne le signale PAS comme compromis : la seule
+     * différence entre les deux tests est la réponse de l'API, jamais le mot
+     * de passe lui-même.
+     */
+    public function test_2c_mot_de_passe_sain_est_accepte(): void
+    {
+        $this->seed();
+        $this->connecte('chez-awa.localhost', 'awa@chez-awa.test');
+
+        Http::fake(['api.pwnedpasswords.com/*' => Http::response('', 200)]);
+
+        $reponse = $this->depuis('chez-awa.localhost')->patchJson('http://chez-awa.localhost:8000/api/compte/mot-de-passe', [
+            'mot_de_passe_actuel' => self::MOT_DE_PASSE,
+            'nouveau_mot_de_passe' => 'un-mot-de-passe-sain-123',
+            'nouveau_mot_de_passe_confirmation' => 'un-mot-de-passe-sain-123',
+        ]);
+
+        $reponse->assertStatus(204);
+    }
+
+    /**
+     * Correctif pwnedpasswords — un service injoignable (délai dépassé ici,
+     * mais PwnedPasswordVerifier traite toute exception pareillement) ne
+     * doit JAMAIS bloquer un commerçant : le mot de passe est accepté, et
+     * l'indisponibilité est journalisée pour pouvoir être surveillée.
+     */
+    public function test_2d_service_pwnedpasswords_indisponible_laisse_passer_et_journalise(): void
+    {
+        $this->seed();
+        $this->connecte('chez-awa.localhost', 'awa@chez-awa.test');
+
+        Http::fake(['api.pwnedpasswords.com/*' => Http::failedConnection('Connection timed out')]);
+        Log::spy();
+
+        $reponse = $this->depuis('chez-awa.localhost')->patchJson('http://chez-awa.localhost:8000/api/compte/mot-de-passe', [
+            'mot_de_passe_actuel' => self::MOT_DE_PASSE,
+            'nouveau_mot_de_passe' => 'un-mot-de-passe-quelconque-123',
+            'nouveau_mot_de_passe_confirmation' => 'un-mot-de-passe-quelconque-123',
+        ]);
+
+        $reponse->assertStatus(204);
+        Log::shouldHaveReceived('warning')->once()->withArgs(
+            fn (string $message) => str_contains($message, 'pwnedpasswords.com indisponible'),
+        );
     }
 
     /**

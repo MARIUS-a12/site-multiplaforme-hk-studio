@@ -16,6 +16,7 @@ class Role extends Model
     protected $fillable = [
         'nom',
         'libelle',
+        'libelle_espace',
     ];
 
     public function permissions(): BelongsToMany

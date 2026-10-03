@@ -4,8 +4,9 @@
  * hors du groupe RouteProtegee (voir App.tsx) : la garde d'authentification
  * redirige VERS cette page, elle ne peut donc pas en dépendre elle-même.
  * Formulaire email / mot de passe qui appelle POST /api/connexion (voir
- * api/auth.ts). Une fois connecté, redirige vers /admin/produits
- * (RouteProtegee y confine ensuite le super-admin vers /etablissements si
+ * api/auth.ts). Une fois connecté, redirige vers /admin : PageAccueilAdmin
+ * (Étape 10) y choisit la page d'accueil réelle selon les permissions
+ * (RouteProtegee confine quant à lui le super-admin vers /etablissements si
  * besoin).
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -52,7 +53,7 @@ export function PageConnexionUtilisateur() {
     onSuccess: async () => {
       reinitialiserGardeRedirection()
       await queryClient.invalidateQueries({ queryKey: CLE_MOI })
-      navigate('/admin/produits', { replace: true })
+      navigate('/admin', { replace: true })
     },
   })
 

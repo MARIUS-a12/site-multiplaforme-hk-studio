@@ -20,9 +20,9 @@
  * back-office) : une URL inconnue reste dans le monde où elle a été tapée,
  * jamais redirigée silencieusement vers l'autre.
  */
-import { Navigate } from 'react-router-dom'
 import { DispositionVitrine } from './components/DispositionVitrine'
 import { RouteProtegee } from './components/RouteProtegee'
+import { PageAccueilAdmin } from './pages/PageAccueilAdmin'
 import { PageAccueilVitrine } from './pages/PageAccueilVitrine'
 import { PageCategories } from './pages/PageCategories'
 import { PageCommander } from './pages/PageCommander'
@@ -30,6 +30,7 @@ import { PageCompte } from './pages/PageCompte'
 import { PageConfirmationCommande } from './pages/PageConfirmationCommande'
 import { PageConnexionUtilisateur } from './pages/PageConnexionUtilisateur'
 import { PageDetailCommande } from './pages/PageDetailCommande'
+import { PageEquipe } from './pages/PageEquipe'
 import { PageFicheEtablissement } from './pages/PageFicheEtablissement'
 import { PageFicheProduitVitrine } from './pages/PageFicheProduitVitrine'
 import { PageFormulaireEtablissement } from './pages/PageFormulaireEtablissement'
@@ -79,14 +80,18 @@ export const routes = [
       { path: '/etablissements/:id', element: <PageFicheEtablissement /> },
       { path: '/etablissements/:id/identite', element: <PageIdentiteEtablissementSuperAdmin /> },
       { path: '/etablissements/:id/paiement', element: <PagePaiementSuperAdmin /> },
-      // Espace commerçant, entièrement sous /admin.
-      { path: '/admin', element: <Navigate to="/admin/produits" replace /> },
+      // Espace commerçant, entièrement sous /admin. "/admin" lui-même ne
+      // mène plus systématiquement à Produits (Étape 10) : PageAccueilAdmin
+      // redirige vers la première page que les permissions de l'utilisateur
+      // autorisent (Commandes, puis Produits, puis Mon compte).
+      { path: '/admin', element: <PageAccueilAdmin /> },
       { path: '/admin/produits', element: <PageListeProduits /> },
       { path: '/admin/produits/nouveau', element: <PageFormulaireProduit /> },
       { path: '/admin/produits/:id/modifier', element: <PageFormulaireProduit /> },
       { path: '/admin/categories', element: <PageCategories /> },
       { path: '/admin/commandes', element: <PageListeCommandes /> },
       { path: '/admin/commandes/:id', element: <PageDetailCommande /> },
+      { path: '/admin/equipe', element: <PageEquipe /> },
       { path: '/admin/identite', element: <PageIdentiteEtablissement /> },
       // Accessible à tout utilisateur authentifié, super-admin compris —
       // voir RouteProtegee, qui laisse passer ce chemin précis pour lui.

@@ -4,30 +4,31 @@
  * coulissant (translate-x, 200ms) ouvert par le bouton de BarreSuperieure,
  * avec un fond assombri derrière — fermeture au clic extérieur, à Échap, et
  * après sélection d'une entrée (voir onFermerMobile). N'affiche QUE les
- * pages qui existent réellement : Produits, Commandes et Catégories
- * aujourd'hui, jamais une entrée morte pour une page absente (Clients,
- * Stock, Rapports...).
+ * pages qui existent réellement, jamais une entrée morte pour une page
+ * absente (Clients, Rapports...) : chaque entrée se filtre par PERMISSION
+ * (ENTREES[].permissions), jamais par nom de rôle — un rôle ajouté en base
+ * (Étape 10, voir RolesEtPermissionsSeeder) apparaît ou disparaît des
+ * entrées existantes sans toucher à ce fichier.
  *
  * La pastille de Commandes (nombre en attente de traitement) et la carte de
  * statut en bas sont toutes deux RÉELLES — respectivement
  * useStatistiquesCommandes (Étape 9) et moi.etablissement.statut (voir
  * SessionController::reponseMoi côté API) — jamais une valeur codée en dur.
+ * Le libellé d'espace ("Espace Administrateur"...) vient lui aussi de la
+ * base (moi.role_libelle_espace), jamais d'une liste ici.
  */
-import { FolderTree, Package, ShoppingCart, Store } from 'lucide-react'
+import { FolderTree, Package, ShoppingCart, Store, Users } from 'lucide-react'
 import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import type { Moi } from '../api/auth'
 import { useStatistiquesCommandes } from '../hooks/useStatistiquesCommandes'
 
-const LIBELLES_ESPACE: Record<string, string> = {
-  admin_etablissement: 'Espace Administrateur',
-  operateur: 'Espace Opérateur',
-}
-
 const ENTREES = [
   { vers: '/admin/produits', libelle: 'Produits', icone: Package, permissions: ['voir_catalogue', 'gerer_catalogue'] },
   { vers: '/admin/commandes', libelle: 'Commandes', icone: ShoppingCart, permissions: ['voir_commandes', 'gerer_commandes'] },
   { vers: '/admin/categories', libelle: 'Catégories', icone: FolderTree, permissions: ['voir_catalogue', 'gerer_catalogue'] },
+  // Étape 10 : réservée à gerer_equipe (en pratique le seul admin_etablissement).
+  { vers: '/admin/equipe', libelle: 'Équipe', icone: Users, permissions: ['gerer_equipe'] },
 ]
 
 export function BarreLaterale({
@@ -81,7 +82,7 @@ export function BarreLaterale({
           </span>
           <div className="min-w-0">
             <p className="truncate font-titre text-corps font-semibold text-white">{nomEtablissement}</p>
-            <p className="truncate text-petit text-white/60">{LIBELLES_ESPACE[moi.role] ?? 'Espace back-office'}</p>
+            <p className="truncate text-petit text-white/60">Espace {moi.role_libelle_espace ?? 'back-office'}</p>
           </div>
         </div>
 

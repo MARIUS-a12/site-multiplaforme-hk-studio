@@ -33,7 +33,10 @@ class ConnexionTest extends TestCase
         return $this->withHeader('Referer', "http://{$hote}:8000");
     }
 
-    public function test_1_connexion_reussie_et_moi_renvoie_role_et_ses_8_permissions(): void
+    // Étape 10 : admin_etablissement a reçu gerer_stock et gerer_equipe en
+    // plus de ses 8 permissions d'origine (voir RolesEtPermissionsSeeder) —
+    // 10 désormais.
+    public function test_1_connexion_reussie_et_moi_renvoie_role_et_ses_10_permissions(): void
     {
         $this->seed();
 
@@ -46,7 +49,7 @@ class ConnexionTest extends TestCase
         $moi = $this->depuis('chez-awa.localhost')->getJson('http://chez-awa.localhost:8000/api/moi');
         $moi->assertStatus(200);
         $moi->assertJsonPath('role', 'admin_etablissement');
-        $this->assertCount(8, $moi->json('permissions'));
+        $this->assertCount(10, $moi->json('permissions'));
     }
 
     public function test_2_mauvais_sous_domaine_est_refuse_meme_avec_le_bon_mot_de_passe(): void

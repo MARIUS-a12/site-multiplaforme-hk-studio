@@ -101,33 +101,34 @@ class SupprimerEtablissementApiTest extends TestCase
         $this->assertDatabaseHas('journaux_audit', ['action' => 'etablissement_supprime']);
     }
 
-    public function test_8_utilisateur_rattache_a_deux_etablissements_survit(): void
+    /**
+     * Remplace l'ancien test_8 ("utilisateur rattaché à deux établissements
+     * survit à la suppression de l'un d'eux") : ce scénario est désormais
+     * IMPOSSIBLE à construire — un compte appartient à un seul
+     * établissement (voir la migration "unicite_rattachement_par_
+     * utilisateur"), quelqu'un travaillant dans deux boutiques a deux
+     * comptes distincts. La distinction "exclusif à cet établissement" que
+     * SupprimerEtablissement calculait avant de choisir qui effacer est
+     * donc devenue un cas qui ne se produit plus jamais : tout utilisateur
+     * rattaché à un établissement lui est désormais forcément exclusif (voir
+     * test_7, qui couvre déjà la suppression de l'administrateur).
+     */
+    public function test_8_un_second_rattachement_pour_un_utilisateur_deja_rattache_est_refuse(): void
     {
         $this->seed();
-        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
         $maquisDuPort = Etablissement::where('slug', 'maquis-du-port')->firstOrFail();
         $awa = User::where('email', 'awa@chez-awa.test')->firstOrFail();
         $roleOperateur = Role::where('nom', 'operateur')->value('id');
 
-        // Awa, déjà admin de chez-awa, est AUSSI rattachée à maquis-du-port.
+        // Awa est déjà admin de chez-awa (voir UtilisateursDemoSeeder) : un
+        // second rattachement, même vers un autre établissement, est refusé.
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
         EtablissementUtilisateur::create([
             'etablissement_id' => $maquisDuPort->id,
             'utilisateur_id' => $awa->id,
             'role_id' => $roleOperateur,
             'statut' => 'actif',
-        ]);
-
-        $hote = $this->hoteSuperAdmin();
-        $this->connecte($hote, 'super@plateforme.test');
-
-        $this->depuis($hote)->deleteJson("http://{$hote}:8000/api/etablissements/{$chezAwa->id}", [
-            'nom_confirmation' => $chezAwa->nom,
-        ])->assertStatus(204);
-
-        $this->assertDatabaseHas('users', ['id' => $awa->id]);
-        $this->assertDatabaseHas('etablissement_utilisateurs', [
-            'utilisateur_id' => $awa->id,
-            'etablissement_id' => $maquisDuPort->id,
         ]);
     }
 

@@ -19,11 +19,6 @@ import { deconnecter } from '../api/auth'
 import { CarreInitiale } from './CarreInitiale'
 import { CLE_MOI } from '../hooks/useMoi'
 
-const LIBELLES_ROLE: Record<string, string> = {
-  admin_etablissement: 'Administrateur',
-  operateur: 'Opérateur',
-}
-
 type EntreeMenu = {
   id: string
   libelle: string
@@ -148,7 +143,7 @@ export function MenuUtilisateur({ moi }: { moi: Moi }) {
         <CarreInitiale nom={moi.utilisateur.nom} taille={40} arrondi />
         <span className="hidden max-w-40 flex-col items-start leading-tight sm:flex">
           <span className="truncate text-petit font-semibold text-texte">{moi.utilisateur.nom}</span>
-          <span className="truncate text-[11px] text-texte-secondaire">{LIBELLES_ROLE[moi.role] ?? moi.role}</span>
+          <span className="truncate text-[11px] text-texte-secondaire">{moi.role_libelle_espace ?? moi.role}</span>
         </span>
         <ChevronDown
           aria-hidden="true"
@@ -178,7 +173,7 @@ export function MenuUtilisateur({ moi }: { moi: Moi }) {
               <div className="min-w-0">
                 <p className="truncate text-corps font-semibold text-texte">{moi.utilisateur.nom}</p>
                 <p className="truncate text-petit text-texte-secondaire">{moi.utilisateur.email}</p>
-                <p className="text-petit text-texte-secondaire">{LIBELLES_ROLE[moi.role] ?? moi.role}</p>
+                <p className="text-petit text-texte-secondaire">{moi.role_libelle_espace ?? moi.role}</p>
               </div>
             </div>
 

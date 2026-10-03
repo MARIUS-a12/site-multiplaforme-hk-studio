@@ -9,11 +9,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'derniere_connexion_a', 'etablissement_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,12 +32,24 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'est_super_admin' => 'boolean',
+            'derniere_connexion_a' => 'datetime',
         ];
     }
 
     public function appartenances(): HasMany
     {
         return $this->hasMany(EtablissementUtilisateur::class, 'utilisateur_id');
+    }
+
+    /**
+     * Colonne dénormalisée (voir la migration "ajouter_etablissement_id_a_
+     * users_table") : jamais la source de vérité du rattachement — celle-ci
+     * reste appartenances() — seulement le support de la contrainte
+     * d'unicité UNIQUE(etablissement_id, email). Null pour le super-admin.
+     */
+    public function etablissement(): BelongsTo
+    {
+        return $this->belongsTo(Etablissement::class);
     }
 
     /**

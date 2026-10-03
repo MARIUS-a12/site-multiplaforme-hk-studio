@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Etablissement;
-use App\Models\EtablissementUtilisateur;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Utilisateurs\CreerRattachementUtilisateur;
 use Illuminate\Database\Seeder;
 
 /**
@@ -26,6 +26,8 @@ class UtilisateursDemoSeeder extends Seeder
         $roleAdminEtablissement = Role::where('nom', 'admin_etablissement')->value('id');
         $roleOperateur = Role::where('nom', 'operateur')->value('id');
 
+        $creerRattachement = app(CreerRattachementUtilisateur::class);
+
         $marius = User::factory()->create([
             'name' => 'Marius Kouame',
             'email' => 'super@plateforme.test',
@@ -41,24 +43,14 @@ class UtilisateursDemoSeeder extends Seeder
             'email' => 'awa@chez-awa.test',
             'password' => self::MOT_DE_PASSE,
         ]);
-        EtablissementUtilisateur::create([
-            'etablissement_id' => $chezAwa->id,
-            'utilisateur_id' => $awa->id,
-            'role_id' => $roleAdminEtablissement,
-            'statut' => 'actif',
-        ]);
+        $creerRattachement->executer($awa, $chezAwa, $roleAdminEtablissement);
 
         $yao = User::factory()->create([
             'name' => 'Yao Kouadio',
             'email' => 'yao@maquis-du-port.test',
             'password' => self::MOT_DE_PASSE,
         ]);
-        EtablissementUtilisateur::create([
-            'etablissement_id' => $maquisDuPort->id,
-            'utilisateur_id' => $yao->id,
-            'role_id' => $roleOperateur,
-            'statut' => 'actif',
-        ]);
+        $creerRattachement->executer($yao, $maquisDuPort, $roleOperateur);
 
         // Admin du restaurant : sans elle, impossible de tester le
         // formulaire produit en mode interrupteur avec un compte qui a
@@ -68,11 +60,6 @@ class UtilisateursDemoSeeder extends Seeder
             'email' => 'adjoua@maquis-du-port.test',
             'password' => self::MOT_DE_PASSE,
         ]);
-        EtablissementUtilisateur::create([
-            'etablissement_id' => $maquisDuPort->id,
-            'utilisateur_id' => $adjoua->id,
-            'role_id' => $roleAdminEtablissement,
-            'statut' => 'actif',
-        ]);
+        $creerRattachement->executer($adjoua, $maquisDuPort, $roleAdminEtablissement);
     }
 }

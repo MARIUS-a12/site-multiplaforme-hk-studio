@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Support\Tenancy\ContexteEtablissement;
+use App\Validation\PwnedPasswordVerifier;
+use Illuminate\Contracts\Validation\UncompromisedVerifier;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,6 +18,22 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ContexteEtablissement::class);
+
+        // Remplace le vérificateur par défaut de Password::uncompromised()
+        // (délai de 30s, échec silencieux) par PwnedPasswordVerifier (2s,
+        // échec journalisé) — voir sa docblock. extend(), PAS bind() : Laravel
+        // enregistre ce contrat dans un ServiceProvider DIFFÉRÉ (voir
+        // Illuminate\Validation\ValidationServiceProvider::provides()), chargé
+        // paresseusement à la première résolution — souvent celle du service
+        // "validator" lui-même, qui réenregistre ce contrat au passage et
+        // écraserait silencieusement un simple bind() posé ici, à l'enregistrement
+        // de CE provider, donc nécessairement avant que celui différé ne charge.
+        // Un extend() s'applique lui APRÈS coup, à la résolution, quel que soit
+        // ce que ce binding différé a entre-temps réenregistré dessous.
+        $this->app->extend(
+            UncompromisedVerifier::class,
+            fn () => new PwnedPasswordVerifier($this->app->make(HttpFactory::class)),
+        );
     }
 
     /**

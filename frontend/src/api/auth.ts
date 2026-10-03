@@ -17,6 +17,10 @@ export type Moi = {
   utilisateur: Utilisateur
   etablissement: { id: number; nom: string; type: TypeEtablissement; statut: string } | null
   role: string
+  // Étape 10 : le libellé affiché sous le nom de la boutique ("Espace
+  // Administrateur"...) vient de la base (voir RolesEtPermissionsSeeder),
+  // jamais d'une liste codée en dur côté React — voir BarreLaterale.
+  role_libelle_espace: string | null
   permissions: string[]
 }
 

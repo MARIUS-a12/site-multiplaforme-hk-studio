@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CompteController;
 use App\Http\Controllers\Api\EtablissementController;
 use App\Http\Controllers\Api\IdentiteEtablissementController;
 use App\Http\Controllers\Api\MediaProduitController;
+use App\Http\Controllers\Api\MembreEquipeController;
 use App\Http\Controllers\Api\PaiementEtablissementController;
 use App\Http\Controllers\Api\ParametresController;
 use App\Http\Controllers\Api\ProduitController;
@@ -88,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/produits', [ProduitController::class, 'store']);
         Route::get('/produits/{produit}', [ProduitController::class, 'show']);
         Route::put('/produits/{produit}', [ProduitController::class, 'update']);
+        Route::patch('/produits/{produit}/stock', [ProduitController::class, 'ajusterStock']);
         Route::delete('/produits/{produit}', [ProduitController::class, 'destroy']);
 
         Route::put('/produits/{produit}/medias/ordre', [MediaProduitController::class, 'reordonner']);
@@ -128,6 +130,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/parametres/paiement', [PaiementEtablissementController::class, 'destroy']);
 
         Route::get('/statistiques', [StatistiquesController::class, 'index']);
+
+        // Étape 10 — équipe : réservée à gerer_equipe (voir
+        // EtablissementUtilisateurPolicy), en pratique le seul
+        // admin_etablissement. "roles" avant "{membre}" : même précaution
+        // que "statistiques" plus haut, pour ne pas être capturé comme un
+        // identifiant de membre.
+        Route::get('/equipe/roles', [MembreEquipeController::class, 'roles']);
+        Route::get('/equipe', [MembreEquipeController::class, 'index']);
+        Route::post('/equipe', [MembreEquipeController::class, 'store']);
+        Route::put('/equipe/{membre}', [MembreEquipeController::class, 'update']);
+        Route::patch('/equipe/{membre}/statut', [MembreEquipeController::class, 'changerStatut']);
+        Route::post('/equipe/{membre}/reinitialiser-mot-de-passe', [MembreEquipeController::class, 'reinitialiserMotDePasse']);
     });
 });
 

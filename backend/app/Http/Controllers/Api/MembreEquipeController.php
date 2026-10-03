@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Enums\StatutMembre;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Equipe\ChangerStatutMembreRequest;
+use App\Http\Requests\Equipe\StoreMembreEquipeRequest;
+use App\Http\Requests\Equipe\UpdateMembreEquipeRequest;
+use App\Http\Resources\MembreEquipeResource;
+use App\Models\EtablissementUtilisateur;
+use App\Models\Role;
+use App\Services\Equipe\ChangerStatutMembreEquipe;
+use App\Services\Equipe\CreerMembreEquipe;
+use App\Services\Equipe\ModifierMembreEquipe;
+use App\Services\Equipe\ReinitialiserMotDePasseMembreEquipe;
+use App\Support\Tenancy\ContexteEtablissement;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
+
+/**
+ * Étape 10 — équipe de l'établissement courant. EtablissementUtilisateur
+ * n'a volontairement pas le scope global AppartientAEtablissement (voir sa
+ * docblock) : verifierAppartenance() ci-dessous joue ce rôle ici, et répond
+ * 404 plutôt que 403 sur un membre d'un AUTRE établissement, pour ne pas
+ * révéler qu'une telle ligne existe.
+ */
+class MembreEquipeController extends Controller
+{
+    public function index(): AnonymousResourceCollection
+    {
+        Gate::authorize('viewAny', EtablissementUtilisateur::class);
+
+        $membres = EtablissementUtilisateur::query()
+            ->where('etablissement_id', $this->etablissementCourantId())
+            ->with(['utilisateur', 'role'])
+            ->orderBy('created_at')
+            ->get();
+
+        return MembreEquipeResource::collection($membres);
+    }
+
+    public function roles(): JsonResponse
+    {
+        Gate::authorize('viewAny', EtablissementUtilisateur::class);
+
+        $roles = Role::where('nom', '!=', 'super_admin')
+            ->orderBy('libelle')
+            ->get(['id', 'nom', 'libelle']);
+
+        return response()->json(['data' => $roles]);
+    }
+
+    public function store(StoreMembreEquipeRequest $request, CreerMembreEquipe $service): JsonResponse
+    {
+        $resultat = $service->executer(
+            etablissement: app(ContexteEtablissement::class)->obtenir(),
+            nom: $request->validated('nom'),
+            email: $request->validated('email'),
+            roleId: $request->validated('role_id'),
+            acteur: $request->user(),
+            adresseIp: $request->ip(),
+        );
+
+        return (new MembreEquipeResource($resultat->membre->load(['utilisateur', 'role'])))
+            ->additional(['mot_de_passe_genere' => $resultat->motDePasseGenere])
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function update(UpdateMembreEquipeRequest $request, EtablissementUtilisateur $membre, ModifierMembreEquipe $service): MembreEquipeResource
+    {
+        $this->verifierAppartenance($membre);
+
+        $membre = $service->executer(
+            membre: $membre,
+            nom: $request->validated('nom'),
+            roleId: $request->validated('role_id'),
+            acteur: $request->user(),
+            adresseIp: $request->ip(),
+        );
+
+        return new MembreEquipeResource($membre->load(['utilisateur', 'role']));
+    }
+
+    public function changerStatut(ChangerStatutMembreRequest $request, EtablissementUtilisateur $membre, ChangerStatutMembreEquipe $service): MembreEquipeResource
+    {
+        $this->verifierAppartenance($membre);
+
+        $membre = $service->executer(
+            membre: $membre,
+            nouveauStatut: StatutMembre::from($request->validated('statut')),
+            acteur: $request->user(),
+            adresseIp: $request->ip(),
+        );
+
+        return new MembreEquipeResource($membre->load(['utilisateur', 'role']));
+    }
+
+    public function reinitialiserMotDePasse(Request $request, EtablissementUtilisateur $membre, ReinitialiserMotDePasseMembreEquipe $service): JsonResponse
+    {
+        $this->verifierAppartenance($membre);
+        Gate::authorize('reinitialiserMotDePasse', $membre);
+
+        $motDePasse = $service->executer($membre, $request->user(), $request->ip());
+
+        return response()->json(['mot_de_passe_genere' => $motDePasse]);
+    }
+
+    private function verifierAppartenance(EtablissementUtilisateur $membre): void
+    {
+        abort_unless($membre->etablissement_id === $this->etablissementCourantId(), 404);
+    }
+
+    private function etablissementCourantId(): int
+    {
+        return app(ContexteEtablissement::class)->id();
+    }
+}

@@ -8,12 +8,14 @@ export function Bascule({
   onChange,
   libelleActif,
   libelleInactif,
+  disabled = false,
 }: {
   id?: string
   actif: boolean
   onChange: (actif: boolean) => void
   libelleActif: string
   libelleInactif: string
+  disabled?: boolean
 }) {
   return (
     <button
@@ -22,7 +24,8 @@ export function Bascule({
       role="switch"
       aria-checked={actif}
       onClick={() => onChange(!actif)}
-      className="flex h-11 cursor-pointer items-center gap-3 rounded border border-bordure px-3 transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1"
+      disabled={disabled}
+      className="flex h-11 cursor-pointer items-center gap-3 rounded border border-bordure px-3 transition-[background-color,transform] hover:bg-surface-alt active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
     >
       <span
         aria-hidden="true"

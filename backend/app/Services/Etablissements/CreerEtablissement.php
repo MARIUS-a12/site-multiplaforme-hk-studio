@@ -3,10 +3,10 @@
 namespace App\Services\Etablissements;
 
 use App\Models\Etablissement;
-use App\Models\EtablissementUtilisateur;
 use App\Models\ParametreSite;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Utilisateurs\CreerRattachementUtilisateur;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -19,6 +19,10 @@ use Illuminate\Support\Str;
  */
 class CreerEtablissement
 {
+    public function __construct(
+        private readonly CreerRattachementUtilisateur $creerRattachement,
+    ) {}
+
     public function executer(
         string $nom,
         string $type,
@@ -77,12 +81,7 @@ class CreerEtablissement
                 'password' => $motDePasseGenere,
             ]);
 
-            EtablissementUtilisateur::create([
-                'etablissement_id' => $etablissement->id,
-                'utilisateur_id' => $administrateur->id,
-                'role_id' => $roleAdmin,
-                'statut' => 'actif',
-            ]);
+            $this->creerRattachement->executer($administrateur, $etablissement, $roleAdmin);
 
             return new ResultatCreationEtablissement($etablissement, $motDePasseGenere);
         });

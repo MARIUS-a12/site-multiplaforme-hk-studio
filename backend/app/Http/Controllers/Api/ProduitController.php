@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\StatutProduit;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AjusterStockProduitRequest;
 use App\Http\Requests\StoreProduitRequest;
 use App\Http\Requests\UpdateProduitRequest;
 use App\Http\Resources\ProduitResource;
@@ -69,6 +70,20 @@ class ProduitController extends Controller
     }
 
     public function update(UpdateProduitRequest $request, Produit $produit): ProduitResource
+    {
+        $produit->update($request->validated());
+        $produit->load(['medias' => fn ($requete) => $requete->orderByPivot('ordre')]);
+        $this->invaliderVitrine($produit);
+
+        return new ProduitResource($produit);
+    }
+
+    /**
+     * Étape 10 — réservé à qui a gerer_stock ou gerer_catalogue : voir
+     * ProduitPolicy::ajusterStock et AjusterStockProduitRequest, qui
+     * n'accepte que ce seul champ.
+     */
+    public function ajusterStock(AjusterStockProduitRequest $request, Produit $produit): ProduitResource
     {
         $produit->update($request->validated());
         $produit->load(['medias' => fn ($requete) => $requete->orderByPivot('ordre')]);

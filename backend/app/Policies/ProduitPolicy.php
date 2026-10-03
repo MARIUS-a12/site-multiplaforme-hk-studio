@@ -41,4 +41,15 @@ class ProduitPolicy
     {
         return $user->peut('gerer_catalogue');
     }
+
+    /**
+     * Étape 10 — distincte de update() : gerer_stock n'autorise QUE
+     * l'ajustement de quantité (voir AjusterStockProduitRequest, qui
+     * n'accepte aucun autre champ), jamais le prix, le nom, ni le statut.
+     * gerer_catalogue continue de tout permettre, y compris ceci.
+     */
+    public function ajusterStock(User $user, Produit $produit): bool
+    {
+        return $user->peut('gerer_catalogue') || $user->peut('gerer_stock');
+    }
 }
