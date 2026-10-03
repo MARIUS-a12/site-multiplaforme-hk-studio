@@ -40,7 +40,7 @@ class StockEtRolesCatalogueApiTest extends TestCase
 
     private function creerMembre(Etablissement $etablissement, string $nomRole, string $email): User
     {
-        $utilisateur = User::factory()->create(['email' => $email, 'password' => self::MOT_DE_PASSE]);
+        $utilisateur = User::factory()->create(['email' => $email, 'password' => self::MOT_DE_PASSE, 'mot_de_passe_defini' => true]);
 
         EtablissementUtilisateur::create([
             'etablissement_id' => $etablissement->id,

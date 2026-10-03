@@ -256,7 +256,7 @@ class CommandeControllerApiTest extends TestCase
         $roleConsultationSeule = Role::create(['nom' => 'consultation_commandes_test', 'libelle' => 'Test consultation seule']);
         $roleConsultationSeule->permissions()->attach(Permission::where('nom', 'voir_commandes')->firstOrFail());
 
-        $utilisateur = User::factory()->create(['email' => 'consultation@chez-awa.test', 'password' => self::MOT_DE_PASSE]);
+        $utilisateur = User::factory()->create(['email' => 'consultation@chez-awa.test', 'password' => self::MOT_DE_PASSE, 'mot_de_passe_defini' => true]);
         EtablissementUtilisateur::create([
             'etablissement_id' => $chezAwa->id,
             'utilisateur_id' => $utilisateur->id,

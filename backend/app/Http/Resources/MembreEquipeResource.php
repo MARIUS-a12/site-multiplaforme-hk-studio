@@ -25,6 +25,7 @@ class MembreEquipeResource extends JsonResource
             'statut' => $this->statut,
             'ajoute_le' => $this->created_at,
             'derniere_connexion' => $this->utilisateur->derniere_connexion_a,
+            'mot_de_passe_defini' => $this->utilisateur->mot_de_passe_defini,
         ];
     }
 }

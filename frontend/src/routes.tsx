@@ -10,9 +10,10 @@
  *   sous DispositionVitrine — aucune authentification, vue par n'importe
  *   quel visiteur ;
  * - le back-office ("/admin/*"), sous RouteProtegee — qui vérifie la
- *   session avant de rendre la page demandée — sauf "/admin/connexion",
- *   volontairement hors de ce groupe (voir plus bas pourquoi), et
- *   "/etablissements/*" (espace super-admin, protégé lui aussi).
+ *   session avant de rendre la page demandée — sauf "/admin/connexion" et
+ *   "/admin/activation", volontairement hors de ce groupe (voir plus bas
+ *   pourquoi), et "/etablissements/*" (espace super-admin, protégé lui
+ *   aussi).
  * "/" appartenait autrefois au back-office (liste de produits), et la
  * connexion à bare "/connexion" : les deux ont déménagé sous "/admin" pour
  * laisser "/" à la vitrine, conformément à l'Étape 6A. Chaque branche porte
@@ -24,6 +25,7 @@ import { DispositionVitrine } from './components/DispositionVitrine'
 import { RouteProtegee } from './components/RouteProtegee'
 import { PageAccueilAdmin } from './pages/PageAccueilAdmin'
 import { PageAccueilVitrine } from './pages/PageAccueilVitrine'
+import { PageActivationCompte } from './pages/PageActivationCompte'
 import { PageCategories } from './pages/PageCategories'
 import { PageCommander } from './pages/PageCommander'
 import { PageCompte } from './pages/PageCompte'
@@ -66,6 +68,10 @@ export const routes = [
   // route pour une session invalide ; si elle passait elle-même par
   // RouteProtegee, ce serait une boucle de redirection.
   { path: '/admin/connexion', element: <PageConnexionUtilisateur /> },
+  // Correctif activation par code (Étape 10) — publique au même titre que
+  // /admin/connexion ci-dessus : un employé qui vient d'être créé n'a
+  // encore aucune session.
+  { path: '/admin/activation', element: <PageActivationCompte /> },
   // Le groupe /admin (back-office) est déclaré AVANT toute règle qui
   // pourrait autrement l'intercepter : react-router classe en réalité les
   // routes par spécificité plutôt que par ordre de déclaration, mais cet

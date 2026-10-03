@@ -98,7 +98,14 @@ class ConnexionTest extends TestCase
         $reponse->assertJsonPath('errors.email.0', 'Identifiants invalides.');
     }
 
-    public function test_6_la_sixieme_tentative_de_connexion_en_une_minute_est_limitee(): void
+    /**
+     * Correctif limitation de débit : remplace l'ancienne limite "5 par IP
+     * et par minute" (inadaptée au contexte ivoirien, où une IP partagée
+     * par un opérateur mobile dessert des abonnés sans aucun lien entre
+     * eux) par le même limiteur combiné que /activation (voir
+     * LimiteurEmailEtIp) — ici, par email : 5 par heure.
+     */
+    public function test_6_la_sixieme_tentative_de_connexion_sur_le_meme_email_en_une_heure_est_limitee(): void
     {
         $this->seed();
 
@@ -115,6 +122,60 @@ class ConnexionTest extends TestCase
         ]);
 
         $sixieme->assertStatus(429);
+        $this->assertStringContainsString('minute', $sixieme->json('message'));
+    }
+
+    /**
+     * Même raisonnement que ActivationApiTest::test_12 : la limite par IP
+     * (30/heure, large) ne doit jamais bloquer un compte qui n'a pas
+     * lui-même dépassé sa propre limite (5/heure).
+     */
+    public function test_8_une_tentative_sur_un_autre_email_depuis_la_meme_ip_passe_encore(): void
+    {
+        $this->seed();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/connexion', [
+                'email' => 'awa@chez-awa.test',
+                'mot_de_passe' => 'faux',
+            ])->assertStatus(422);
+        }
+        $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/connexion', [
+            'email' => 'awa@chez-awa.test',
+            'mot_de_passe' => 'faux',
+        ])->assertStatus(429);
+
+        // Même IP, email différent (compte réel, mais sur un autre
+        // établissement, pour obtenir un 422 "Identifiants invalides." et
+        // non un 404) : la limite d'awa ne doit rien lui opposer.
+        $reponse = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/connexion', [
+            'email' => 'yao@maquis-du-port.test',
+            'mot_de_passe' => 'faux',
+        ]);
+
+        $reponse->assertStatus(422);
+    }
+
+    public function test_9_la_trente_et_unieme_tentative_de_connexion_depuis_la_meme_ip_est_bloquee_quels_que_soient_les_emails(): void
+    {
+        $this->seed();
+
+        // 30 emails distincts (inexistants : seule l'adresse IP compte ici),
+        // une seule tentative chacun : aucun n'atteint sa propre limite (5).
+        for ($i = 0; $i < 30; $i++) {
+            $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/connexion', [
+                'email' => "balayage-{$i}@chez-awa.test",
+                'mot_de_passe' => 'faux',
+            ])->assertStatus(422);
+        }
+
+        $trenteEtUnieme = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/connexion', [
+            'email' => 'balayage-31@chez-awa.test',
+            'mot_de_passe' => 'faux',
+        ]);
+
+        $trenteEtUnieme->assertStatus(429);
+        $this->assertStringContainsString('minute', $trenteEtUnieme->json('message'));
     }
 
     public function test_7_les_4_causes_dechec_renvoient_exactement_le_meme_corps_et_le_meme_code(): void

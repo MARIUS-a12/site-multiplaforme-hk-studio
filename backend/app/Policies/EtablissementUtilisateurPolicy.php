@@ -37,7 +37,7 @@ class EtablissementUtilisateurPolicy
         return $user->peut('gerer_equipe');
     }
 
-    public function reinitialiserMotDePasse(User $user, EtablissementUtilisateur $membre): bool
+    public function genererCodeActivation(User $user, EtablissementUtilisateur $membre): bool
     {
         return $user->peut('gerer_equipe');
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivationController;
 use App\Http\Controllers\Api\CategorieController;
 use App\Http\Controllers\Api\CommandeController;
 use App\Http\Controllers\Api\CompteController;
@@ -25,7 +26,21 @@ use Illuminate\Support\Facades\Route;
 // domaine, SANS lever sur un établissement inactif (voir sa docblock) — la
 // version stricte du middleware romprait l'uniformité des 4 échecs de
 // connexion (voir Étape 1, exigence n°7).
-Route::post('/connexion', [SessionController::class, 'store'])->middleware('throttle:5,1');
+// Correctif limitation de débit : "throttle:5,1" (5/minute, par IP seule)
+// bloquait des abonnés mobiles ivoiriens sans lien entre eux, partageant la
+// même IP. Remplacé par le limiteur nommé "connexion" (voir
+// LimiteurEmailEtIp) : 5/heure par email, 30/heure par IP.
+Route::post('/connexion', [SessionController::class, 'store'])->middleware('throttle:connexion');
+
+// Correctif activation par code (Étape 10) — publique, sans session : un
+// employé qui vient d'être créé n'en a aucune. "resoudre.etablissement"
+// (non la résolution ad hoc de SessionController) scope la recherche de
+// code au SOUS-DOMAINE visité, exactement comme la vitrine ci-dessous — un
+// code valide pour un autre établissement y est donc invisible, jamais une
+// question de correspondance par email seul. Même limiteur combiné que
+// /connexion ci-dessus, voir LimiteurEmailEtIp.
+Route::middleware('resoudre.etablissement')->post('/activation', [ActivationController::class, 'activer'])
+    ->middleware('throttle:activation');
 
 // Vitrine publique : ni "auth:sanctum" ni "resoudre.etablissement" strict au
 // sens d'exiger une session — un visiteur anonyme doit pouvoir tout
@@ -141,7 +156,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/equipe', [MembreEquipeController::class, 'store']);
         Route::put('/equipe/{membre}', [MembreEquipeController::class, 'update']);
         Route::patch('/equipe/{membre}/statut', [MembreEquipeController::class, 'changerStatut']);
-        Route::post('/equipe/{membre}/reinitialiser-mot-de-passe', [MembreEquipeController::class, 'reinitialiserMotDePasse']);
+        Route::post('/equipe/{membre}/code-activation', [MembreEquipeController::class, 'genererCodeActivation']);
     });
 });
 

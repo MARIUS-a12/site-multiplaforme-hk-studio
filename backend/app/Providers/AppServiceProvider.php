@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\RateLimiting\LimiteurEmailEtIp;
 use App\Support\Tenancy\ContexteEtablissement;
 use App\Validation\PwnedPasswordVerifier;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -45,5 +47,11 @@ class AppServiceProvider extends ServiceProvider
         // un seul endroit à auditer — jamais par un `return true` dissimulé
         // dans telle ou telle policy.
         Gate::before(fn (User $user, string $ability) => $user->estSuperAdmin() ? true : null);
+
+        // Correctif limitation de débit : /connexion et /activation
+        // partagent le même schéma combiné (voir LimiteurEmailEtIp) — un
+        // seul endroit à auditer pour les deux.
+        RateLimiter::for('connexion', LimiteurEmailEtIp::pour('connexion'));
+        RateLimiter::for('activation', LimiteurEmailEtIp::pour('activation'));
     }
 }

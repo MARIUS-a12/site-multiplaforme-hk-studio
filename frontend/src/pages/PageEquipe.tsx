@@ -9,6 +9,12 @@
  * contente de les REFLÉTER en désactivant les contrôles de sa propre ligne,
  * jamais de les PORTER elle-même : un contournement direct de l'API serait
  * de toute façon refusé par ModifierMembreEquipe/ChangerStatutMembreEquipe.
+ *
+ * Correctif activation par code : l'administrateur ne choisit ni ne voit
+ * JAMAIS le mot de passe d'un membre. La création ne demande que nom/email/
+ * rôle et affiche un CODE D'ACTIVATION à transmettre (voir
+ * BandeauCodeActivationGenere) ; "mot de passe oublié" devient "Générer un
+ * nouveau code d'accès", avec le même principe.
  */
 import { useState } from 'react'
 import type { FormEvent } from 'react'
@@ -18,10 +24,10 @@ import type { MembreEquipe, StatutMembreEquipe } from '../api/equipe'
 import {
   changerStatutMembreEquipe,
   creerMembreEquipe,
+  genererCodeActivationMembre,
   modifierMembreEquipe,
-  reinitialiserMotDePasseMembreEquipe,
 } from '../api/equipe'
-import { BandeauMotDePasseGenere } from '../components/BandeauMotDePasseGenere'
+import { BandeauCodeActivationGenere } from '../components/BandeauCodeActivationGenere'
 import { BandeauSucces } from '../components/BandeauSucces'
 import { Bascule } from '../components/Bascule'
 import { EnteteDePage } from '../components/EnteteDePage'
@@ -49,7 +55,7 @@ export function PageEquipe() {
   const [email, setEmail] = useState('')
   const [roleId, setRoleId] = useState<number | ''>('')
   const [erreurs, setErreurs] = useState<Record<string, string>>({})
-  const [motDePasseAffiche, setMotDePasseAffiche] = useState<string | null>(null)
+  const [codeAffiche, setCodeAffiche] = useState<string | null>(null)
   const [messageSucces, setMessageSucces] = useState<string | null>(null)
 
   function invaliderEquipe() {
@@ -58,12 +64,12 @@ export function PageEquipe() {
 
   const creation = useMutation({
     mutationFn: creerMembreEquipe,
-    onSuccess: ({ motDePasseGenere }) => {
+    onSuccess: ({ codeActivation }) => {
       setNom('')
       setEmail('')
       setRoleId('')
       setErreurs({})
-      setMotDePasseAffiche(motDePasseGenere)
+      setCodeAffiche(codeActivation)
       invaliderEquipe()
     },
     onError: (erreur) => setErreurs(extraireErreursChamps(erreur)),
@@ -79,9 +85,12 @@ export function PageEquipe() {
     mutationFn: ({ id, statut }: { id: number; statut: StatutMembreEquipe }) => changerStatutMembreEquipe(id, statut),
   })
 
-  const reinitialisation = useMutation({
-    mutationFn: reinitialiserMotDePasseMembreEquipe,
-    onSuccess: (motDePasse) => setMotDePasseAffiche(motDePasse),
+  const generationCode = useMutation({
+    mutationFn: genererCodeActivationMembre,
+    onSuccess: (code) => {
+      setCodeAffiche(code)
+      invaliderEquipe()
+    },
   })
 
   function soumettreCreation(evenement: FormEvent<HTMLFormElement>) {
@@ -92,13 +101,13 @@ export function PageEquipe() {
     creation.mutate({ nom: nom.trim(), email: email.trim(), roleId })
   }
 
-  function demanderReinitialisation(membre: MembreEquipe) {
+  function demanderNouveauCode(membre: MembreEquipe) {
     const confirme = window.confirm(
-      `Un nouveau mot de passe sera généré pour ${membre.nom} et ses sessions en cours seront fermées.\n\nContinuer ?`,
+      `Un nouveau code d'accès sera généré pour ${membre.nom}. Il devra l'utiliser sur /admin/activation pour choisir un nouveau mot de passe, et ses sessions en cours seront fermées.\n\nContinuer ?`,
     )
 
     if (confirme) {
-      reinitialisation.mutate(membre.id)
+      generationCode.mutate(membre.id)
     }
   }
 
@@ -136,9 +145,7 @@ export function PageEquipe() {
 
       {messageSucces && <BandeauSucces message={messageSucces} onFermer={() => setMessageSucces(null)} />}
 
-      {motDePasseAffiche && (
-        <BandeauMotDePasseGenere motDePasse={motDePasseAffiche} onFermer={() => setMotDePasseAffiche(null)} />
-      )}
+      {codeAffiche && <BandeauCodeActivationGenere code={codeAffiche} onFermer={() => setCodeAffiche(null)} />}
 
       <form
         onSubmit={soumettreCreation}
@@ -218,6 +225,11 @@ export function PageEquipe() {
                 <div className="min-w-0">
                   <p className="text-corps font-medium text-texte">
                     {membre.nom} {estSoiMeme && <span className="text-petit text-texte-secondaire">(vous)</span>}
+                    {!membre.mot_de_passe_defini && (
+                      <span className="ml-2 rounded bg-alerte/10 px-1.5 py-0.5 text-[11px] font-medium text-alerte">
+                        En attente d'activation
+                      </span>
+                    )}
                   </p>
                   <p className="truncate text-petit text-texte-secondaire">{membre.email}</p>
                   <p className="text-petit text-texte-secondaire">
@@ -253,10 +265,10 @@ export function PageEquipe() {
 
                   <button
                     type="button"
-                    onClick={() => demanderReinitialisation(membre)}
-                    disabled={reinitialisation.isPending}
-                    title="Réinitialiser le mot de passe"
-                    aria-label={`Réinitialiser le mot de passe de ${membre.nom}`}
+                    onClick={() => demanderNouveauCode(membre)}
+                    disabled={generationCode.isPending}
+                    title="Générer un nouveau code d'accès"
+                    aria-label={`Générer un nouveau code d'accès pour ${membre.nom}`}
                     className="flex h-11 w-11 cursor-pointer items-center justify-center rounded text-texte-secondaire transition-[background-color,color,transform] hover:bg-surface-alt hover:text-primaire active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primaire focus-visible:outline-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <KeyRound aria-hidden="true" size={20} strokeWidth={1.5} />

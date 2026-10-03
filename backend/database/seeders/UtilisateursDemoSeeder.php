@@ -32,6 +32,7 @@ class UtilisateursDemoSeeder extends Seeder
             'name' => 'Marius Kouame',
             'email' => 'super@plateforme.test',
             'password' => self::MOT_DE_PASSE,
+            'mot_de_passe_defini' => true,
         ]);
         // est_super_admin n'est pas fillable (voir User) : assignation
         // directe, volontairement, pas via une mise à jour de masse.
@@ -42,6 +43,7 @@ class UtilisateursDemoSeeder extends Seeder
             'name' => 'Awa Traoré',
             'email' => 'awa@chez-awa.test',
             'password' => self::MOT_DE_PASSE,
+            'mot_de_passe_defini' => true,
         ]);
         $creerRattachement->executer($awa, $chezAwa, $roleAdminEtablissement);
 
@@ -49,6 +51,7 @@ class UtilisateursDemoSeeder extends Seeder
             'name' => 'Yao Kouadio',
             'email' => 'yao@maquis-du-port.test',
             'password' => self::MOT_DE_PASSE,
+            'mot_de_passe_defini' => true,
         ]);
         $creerRattachement->executer($yao, $maquisDuPort, $roleOperateur);
 
@@ -59,6 +62,7 @@ class UtilisateursDemoSeeder extends Seeder
             'name' => 'Adjoua Kone',
             'email' => 'adjoua@maquis-du-port.test',
             'password' => self::MOT_DE_PASSE,
+            'mot_de_passe_defini' => true,
         ]);
         $creerRattachement->executer($adjoua, $maquisDuPort, $roleAdminEtablissement);
     }

@@ -21,16 +21,15 @@ import { reinitialiserGardeRedirection } from '../lib/gardeRedirectionConnexion'
 
 /**
  * Extrait un message d'erreur à afficher tel quel. Le corps de la réponse
- * (422, "Identifiants invalides.") est déjà rédigé en français par l'API et
- * doit être montré sans reformulation. Le 429 est une exception délibérée :
- * le message par défaut du throttling Laravel est en anglais, et l'interface
- * ne doit montrer aucun mot anglais — on le remplace donc par un message
- * français, seul cas où on ne prend pas le texte de l'API tel quel.
+ * (422, "Identifiants invalides." ; 429, voir LimiteurEmailEtIp — temps
+ * d'attente en minutes inclus) est déjà rédigé en français par l'API et
+ * doit être montré sans reformulation.
  */
 function messageErreur(erreur: unknown): string {
   if (axios.isAxiosError(erreur)) {
-    if (erreur.response?.status === 429) {
-      return 'Trop de tentatives de connexion. Réessayez dans une minute.'
+    const messageBlocage = erreur.response?.status === 429 ? erreur.response?.data?.message : null
+    if (typeof messageBlocage === 'string') {
+      return messageBlocage
     }
 
     const messageValidation = erreur.response?.data?.errors?.email?.[0]

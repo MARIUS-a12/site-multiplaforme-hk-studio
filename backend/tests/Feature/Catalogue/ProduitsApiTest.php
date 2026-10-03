@@ -52,7 +52,7 @@ class ProduitsApiTest extends TestCase
     {
         $roleAdmin = Role::where('nom', 'admin_etablissement')->value('id');
 
-        $utilisateur = User::factory()->create(['password' => 'motdepasse']);
+        $utilisateur = User::factory()->create(['password' => 'motdepasse', 'mot_de_passe_defini' => true]);
 
         EtablissementUtilisateur::create([
             'etablissement_id' => $etablissement->id,

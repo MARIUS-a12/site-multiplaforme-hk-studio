@@ -1,8 +1,13 @@
 /**
  * Étape 10 — équipe de l'établissement courant (/admin/equipe), réservée à
  * gerer_equipe. On ne supprime jamais un membre (voir le contrôleur côté
- * API) : seulement désactiver/réactiver, modifier nom/rôle, ou réinitialiser
- * son mot de passe.
+ * API) : seulement désactiver/réactiver, modifier nom/rôle, ou générer un
+ * nouveau code d'accès.
+ *
+ * Correctif activation par code : la création ne renvoie plus de mot de
+ * passe généré — l'administrateur ne le connaît ni ne le choisit jamais.
+ * Elle renvoie un CODE D'ACTIVATION à transmettre au membre, qui choisit
+ * lui-même son mot de passe sur /admin/activation (voir api/activation.ts).
  */
 import { client } from '../lib/client'
 
@@ -24,6 +29,8 @@ export type MembreEquipe = {
   ajoute_le: string
   // null pour un membre qui ne s'est jamais encore connecté.
   derniere_connexion: string | null
+  // faux tant que le membre n'a pas lui-même activé son compte.
+  mot_de_passe_defini: boolean
 }
 
 export async function recupererEquipe(): Promise<MembreEquipe[]> {
@@ -46,17 +53,17 @@ export type NouveauMembreEquipe = {
 
 export type MembreEquipeCree = {
   membre: MembreEquipe
-  motDePasseGenere: string
+  codeActivation: string
 }
 
 export async function creerMembreEquipe(payload: NouveauMembreEquipe): Promise<MembreEquipeCree> {
-  const { data } = await client.post<{ data: MembreEquipe; mot_de_passe_genere: string }>('/api/equipe', {
+  const { data } = await client.post<{ data: MembreEquipe; code_activation: string }>('/api/equipe', {
     nom: payload.nom,
     email: payload.email,
     role_id: payload.roleId,
   })
 
-  return { membre: data.data, motDePasseGenere: data.mot_de_passe_genere }
+  return { membre: data.data, codeActivation: data.code_activation }
 }
 
 export async function modifierMembreEquipe(
@@ -77,8 +84,14 @@ export async function changerStatutMembreEquipe(id: number, statut: StatutMembre
   return data.data
 }
 
-export async function reinitialiserMotDePasseMembreEquipe(id: number): Promise<string> {
-  const { data } = await client.post<{ mot_de_passe_genere: string }>(`/api/equipe/${id}/reinitialiser-mot-de-passe`)
+/**
+ * "Générer un nouveau code d'accès" — remplace l'ancienne réinitialisation
+ * de mot de passe. L'administrateur ne voit jamais le mot de passe du
+ * membre, ni avant ni après ; ce code lui permet d'en choisir un nouveau
+ * lui-même sur /admin/activation.
+ */
+export async function genererCodeActivationMembre(id: number): Promise<string> {
+  const { data } = await client.post<{ code_activation: string }>(`/api/equipe/${id}/code-activation`)
 
-  return data.mot_de_passe_genere
+  return data.code_activation
 }

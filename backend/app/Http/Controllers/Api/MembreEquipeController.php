@@ -12,8 +12,8 @@ use App\Models\EtablissementUtilisateur;
 use App\Models\Role;
 use App\Services\Equipe\ChangerStatutMembreEquipe;
 use App\Services\Equipe\CreerMembreEquipe;
+use App\Services\Equipe\GenererNouveauCodeAccesMembre;
 use App\Services\Equipe\ModifierMembreEquipe;
-use App\Services\Equipe\ReinitialiserMotDePasseMembreEquipe;
 use App\Support\Tenancy\ContexteEtablissement;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,7 +65,7 @@ class MembreEquipeController extends Controller
         );
 
         return (new MembreEquipeResource($resultat->membre->load(['utilisateur', 'role'])))
-            ->additional(['mot_de_passe_genere' => $resultat->motDePasseGenere])
+            ->additional(['code_activation' => $resultat->codeActivation])
             ->response()
             ->setStatusCode(201);
     }
@@ -99,14 +99,14 @@ class MembreEquipeController extends Controller
         return new MembreEquipeResource($membre->load(['utilisateur', 'role']));
     }
 
-    public function reinitialiserMotDePasse(Request $request, EtablissementUtilisateur $membre, ReinitialiserMotDePasseMembreEquipe $service): JsonResponse
+    public function genererCodeActivation(Request $request, EtablissementUtilisateur $membre, GenererNouveauCodeAccesMembre $service): JsonResponse
     {
         $this->verifierAppartenance($membre);
-        Gate::authorize('reinitialiserMotDePasse', $membre);
+        Gate::authorize('genererCodeActivation', $membre);
 
-        $motDePasse = $service->executer($membre, $request->user(), $request->ip());
+        $code = $service->executer($membre, $request->user(), $request->ip());
 
-        return response()->json(['mot_de_passe_genere' => $motDePasse]);
+        return response()->json(['code_activation' => $code]);
     }
 
     private function verifierAppartenance(EtablissementUtilisateur $membre): void

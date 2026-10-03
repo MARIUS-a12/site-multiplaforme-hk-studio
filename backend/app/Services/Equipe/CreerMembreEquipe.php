@@ -6,6 +6,7 @@ use App\Models\Etablissement;
 use App\Models\JournalAudit;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Activation\GenererCodeActivation;
 use App\Services\Utilisateurs\CreerRattachementUtilisateur;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,11 +18,19 @@ use Illuminate\Support\Str;
  * "preparer_utilisateurs_pour_equipe", qui retire l'unicité globale de
  * users.email). L'unicité "au sein de CET établissement" est vérifiée en
  * amont par StoreMembreEquipeRequest.
+ *
+ * Correctif activation par code — ne pose plus de mot de passe connu de
+ * l'administrateur : celui écrit ici est une valeur inutilisable, jamais
+ * communiquée à personne, et mot_de_passe_defini reste à faux (valeur par
+ * défaut) — la connexion est refusée indépendamment de ce mot de passe tant
+ * que l'employé n'a pas lui-même activé son compte (voir
+ * SessionController::store() et GenererCodeActivation/ActiverCompte).
  */
 class CreerMembreEquipe
 {
     public function __construct(
         private readonly CreerRattachementUtilisateur $creerRattachement,
+        private readonly GenererCodeActivation $genererCodeActivation,
     ) {}
 
     public function executer(
@@ -33,18 +42,16 @@ class CreerMembreEquipe
         ?string $adresseIp,
     ): ResultatCreationMembreEquipe {
         return DB::transaction(function () use ($etablissement, $nom, $email, $roleId, $acteur, $adresseIp) {
-            // Un mot de passe aléatoire, jamais choisi par l'administrateur
-            // qui crée le compte — même procédé qu'à la création d'un
-            // établissement (voir CreerEtablissement).
-            $motDePasseGenere = Str::password(14);
-
             $utilisateur = User::create([
                 'name' => $nom,
                 'email' => $email,
-                'password' => $motDePasseGenere,
+                'password' => Str::password(32),
+                'mot_de_passe_defini' => false,
             ]);
 
             $membre = $this->creerRattachement->executer($utilisateur, $etablissement, $roleId);
+
+            $code = $this->genererCodeActivation->executer($utilisateur, $etablissement, $acteur, $adresseIp);
 
             JournalAudit::create([
                 'utilisateur_id' => $acteur->id,
@@ -57,7 +64,7 @@ class CreerMembreEquipe
                 'adresse_ip' => $adresseIp,
             ]);
 
-            return new ResultatCreationMembreEquipe($membre, $motDePasseGenere);
+            return new ResultatCreationMembreEquipe($membre, $code);
         });
     }
 }

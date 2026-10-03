@@ -14,6 +14,7 @@ export function ChampTexte({
   placeholder,
   type = 'text',
   autoComplete,
+  maxLength,
 }: {
   id: string
   label: string
@@ -25,6 +26,7 @@ export function ChampTexte({
   placeholder?: string
   type?: 'text' | 'email' | 'password'
   autoComplete?: string
+  maxLength?: number
 }) {
   const classes = `w-full rounded border bg-surface px-3 text-corps text-texte transition-colors focus:outline focus:outline-2 focus:outline-primaire focus:outline-offset-1 ${
     erreur ? 'border-danger' : 'border-bordure focus:border-primaire'
@@ -59,6 +61,7 @@ export function ChampTexte({
           placeholder={placeholder}
           required={requis}
           autoComplete={autoComplete}
+          maxLength={maxLength}
           className={`h-11 ${classes}`}
         />
       )}

@@ -46,6 +46,19 @@ class SessionController extends Controller
                 ->where('email', $identifiants['email'])
                 ->first();
 
+        // Correctif activation par code (Étape 10) : un compte pas encore
+        // activé ne peut PAS se connecter, même avec un mot de passe
+        // correct (il n'y en a de toute façon jamais eu de communiqué à
+        // personne, voir CreerMembreEquipe) — vérifié AVANT le mot de
+        // passe, et avec un message DIFFÉRENT des autres échecs : contrairement
+        // à eux, celui-ci n'a rien à cacher, il doit au contraire orienter
+        // vers /admin/activation.
+        if ($utilisateur !== null && ! $utilisateur->mot_de_passe_defini) {
+            throw ValidationException::withMessages([
+                'email' => ["Ce compte n'est pas encore activé. Utilisez le code d'activation qui vous a été transmis."],
+            ]);
+        }
+
         if ($utilisateur === null || ! Hash::check($identifiants['mot_de_passe'], $utilisateur->password)) {
             $this->echouer();
         }

@@ -72,13 +72,17 @@ class CreerEtablissement
 
             // Un mot de passe aléatoire, jamais choisi ni transmis par le
             // super-admin : ni lui ni personne d'autre ne doit pouvoir le
-            // deviner ou le réutiliser d'un établissement à l'autre.
+            // deviner ou le réutiliser d'un établissement à l'autre. Flux
+            // différent de CreerMembreEquipe (correctif activation par
+            // code) : ce mot de passe EST immédiatement utilisable par
+            // l'administrateur qui le reçoit, pas d'activation à part.
             $motDePasseGenere = Str::password(14);
 
             $administrateur = User::create([
                 'name' => $nomAdministrateur,
                 'email' => $emailAdministrateur,
                 'password' => $motDePasseGenere,
+                'mot_de_passe_defini' => true,
             ]);
 
             $this->creerRattachement->executer($administrateur, $etablissement, $roleAdmin);

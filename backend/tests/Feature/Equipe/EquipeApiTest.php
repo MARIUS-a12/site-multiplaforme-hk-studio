@@ -7,6 +7,7 @@ use App\Models\Etablissement;
 use App\Models\EtablissementUtilisateur;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Activation\ActiverCompte;
 use App\Services\Equipe\ChangerStatutMembreEquipe;
 use App\Services\Equipe\CreerMembreEquipe;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -106,10 +107,18 @@ class EquipeApiTest extends TestCase
      * session d'une requête HTTP réelle dans la table "sessions" — même
      * procédé que CompteApiTest::test_3 : une ligne posée directement en
      * base simule la session déjà ouverte du membre avant sa désactivation.
+     * L'activation passe par le SERVICE directement, pas par
+     * POST /api/activation : ce dernier connecte l'employé (voir
+     * ActivationController), ce qui remplacerait la session d'Awa dans le
+     * client de test et casserait l'authentification des requêtes
+     * suivantes — artefact du harnais de test (cookies non cloisonnés par
+     * identité au sein d'un même test, voir ConnexionTest), pas de
+     * l'application ; ActivationApiTest couvre le VRAI parcours HTTP.
      */
     public function test_7_un_membre_desactive_ne_peut_plus_se_connecter_et_ses_sessions_sont_invalidees(): void
     {
         $this->seed();
+        $chezAwa = Etablissement::where('slug', 'chez-awa')->firstOrFail();
 
         $this->connecte('chez-awa.localhost', 'awa@chez-awa.test');
         $creation = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/equipe', [
@@ -119,7 +128,14 @@ class EquipeApiTest extends TestCase
         ])->assertStatus(201);
         $membreId = $creation->json('data.id');
         $utilisateurId = $creation->json('data.utilisateur_id');
-        $motDePasseGenere = $creation->json('mot_de_passe_genere');
+        $code = $creation->json('code_activation');
+
+        app(ActiverCompte::class)->executer(
+            etablissement: $chezAwa,
+            email: 'caissier7@chez-awa.test',
+            code: $code,
+            nouveauMotDePasse: 'un-mot-de-passe-choisi-123',
+        );
 
         DB::table('sessions')->insert([
             'id' => 'session-caissier7',
@@ -130,7 +146,6 @@ class EquipeApiTest extends TestCase
             'last_activity' => time(),
         ]);
 
-        // Awa le désactive.
         $this->depuis('chez-awa.localhost')
             ->patchJson("http://chez-awa.localhost:8000/api/equipe/{$membreId}/statut", ['statut' => 'suspendu'])
             ->assertStatus(200);
@@ -139,7 +154,7 @@ class EquipeApiTest extends TestCase
 
         $reconnexion = $this->depuis('chez-awa.localhost')->postJson('http://chez-awa.localhost:8000/api/connexion', [
             'email' => 'caissier7@chez-awa.test',
-            'mot_de_passe' => $motDePasseGenere,
+            'mot_de_passe' => 'un-mot-de-passe-choisi-123',
         ]);
         $reconnexion->assertStatus(422);
     }
@@ -168,7 +183,7 @@ class EquipeApiTest extends TestCase
             ->patchJson("http://maquis-du-port.localhost:8000/api/equipe/{$membreYao->id}/statut", ['statut' => 'suspendu'])
             ->assertStatus(403);
         $this->depuis('maquis-du-port.localhost')
-            ->postJson("http://maquis-du-port.localhost:8000/api/equipe/{$membreYao->id}/reinitialiser-mot-de-passe")
+            ->postJson("http://maquis-du-port.localhost:8000/api/equipe/{$membreYao->id}/code-activation")
             ->assertStatus(403);
     }
 
@@ -248,6 +263,10 @@ class EquipeApiTest extends TestCase
         ]);
         $creation->assertStatus(201);
         $this->assertDatabaseHas('journaux_audit', ['action' => 'equipe_membre_cree']);
+        // La création génère déjà un premier code (voir CreerMembreEquipe) :
+        // une seule entrée à ce stade, pour pouvoir distinguer plus bas
+        // celle, DISTINCTE, que "générer un nouveau code d'accès" ajoute.
+        $this->assertSame(1, DB::table('journaux_audit')->where('action', 'code_activation_genere')->count());
         $membreId = $creation->json('data.id');
 
         $this->depuis('chez-awa.localhost')
@@ -266,8 +285,8 @@ class EquipeApiTest extends TestCase
         $this->assertDatabaseHas('journaux_audit', ['action' => 'equipe_membre_reactive']);
 
         $this->depuis('chez-awa.localhost')
-            ->postJson("http://chez-awa.localhost:8000/api/equipe/{$membreId}/reinitialiser-mot-de-passe")
+            ->postJson("http://chez-awa.localhost:8000/api/equipe/{$membreId}/code-activation")
             ->assertStatus(200);
-        $this->assertDatabaseHas('journaux_audit', ['action' => 'equipe_mot_de_passe_reinitialise']);
+        $this->assertSame(2, DB::table('journaux_audit')->where('action', 'code_activation_genere')->count());
     }
 }
